@@ -3,6 +3,13 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
+export enum UserRole {
+  USER = 'user',
+  ADMIN = 'admin',
+  FREELANCER = 'freelancer',
+  CLIENT = 'client',
+}
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true })
@@ -16,6 +23,9 @@ export class User {
 
   @Prop({ default: false })
   isEmailVerified: boolean;
+
+  @Prop({ enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
   @Prop({ select: false })
   verificationCode?: string;
