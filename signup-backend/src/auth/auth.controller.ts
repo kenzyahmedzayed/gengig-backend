@@ -21,6 +21,22 @@ class VerifyEmailDto {
   code: string;
 }
 
+class VerifyResetCodeDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  code: string;
+}
+
+class ResetPasswordDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  newPassword: string;
+}
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -37,7 +53,7 @@ export class AuthController {
     return this.authService.verifyEmail(dto.email, dto.code);
   }
 
-  @Post('resend-verification')
+  @Post('resend-code')
   @HttpCode(HttpStatus.OK)
   resendVerification(@Body() dto: ResendDto) {
     return this.authService.resendVerification(dto.email);
@@ -59,6 +75,18 @@ async login(@Body() loginDto: LoginDto){
 @HttpCode(HttpStatus.OK)
 async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
   return this.authService.forgotPassword(forgotPasswordDto);
+}
+
+@Post('verify-reset-code')
+@HttpCode(HttpStatus.OK)
+verifyResetCode(@Body() dto: VerifyResetCodeDto) {
+  return this.authService.verifyResetCode(dto.email, dto.code);
+}
+
+@Post('reset-password')
+@HttpCode(HttpStatus.OK)
+resetPassword(@Body() dto: ResetPasswordDto) {
+  return this.authService.resetPassword(dto.email, dto.newPassword);
 }
 @Post('logout')
 @HttpCode(HttpStatus.OK)

@@ -110,6 +110,42 @@ export class AuthService {
     return user;
   }
 
+  async verifyResetCode(email: string, code: string) {
+  const user = await this.usersService.findByEmailWithVerification(email);
+
+  if (!user) {
+    throw new BadRequestException('Invalid email');
+  }
+
+  if (user.verificationCode !== code) {
+    throw new BadRequestException('Invalid reset code');
+  }
+
+  if (!user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
+    throw new BadRequestException('Reset code expired');
+  }
+
+  return { message: 'Code verified successfully' };
+}
+
+async resetPassword(email: string, newPassword: string) {
+  const user = await this.usersService.findByEmailWithPassword(email);
+
+  if (!user) {
+    throw new NotFoundException('No account found with this email');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  await this.usersService.updateById(String(user._id), {
+    password: hashedPassword,
+    verificationCode: undefined,
+    verificationCodeExpires: undefined,
+  });
+
+  return { message: 'Password reset successfully' };
+}
+
   private async generateAccessToken(user: UserDocument): Promise<string> {
     return this.jwtService.signAsync(
       { sub: String(user._id), email: user.email },
@@ -137,30 +173,41 @@ export class AuthService {
 });
 
     return {
-      message: 'Login Successful',
-      access_token: token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      }
-    };
+  message: 'Login Successful',
+  token: token,
+  role: user.role,
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+  }
+};
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
-    const { email, newPassword } = forgotPasswordDto;
+  const { email } = forgotPasswordDto;
 
-    const user = await this.usersService.findByEmailWithPassword(email);
-    if (!user) {
-      throw new NotFoundException('No account found with this email');
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
-
-    return { message: 'Password updated successfully' };
+  const user = await this.usersService.findByEmail(email);
+  if (!user) {
+    return { message: 'If that email is registered, a reset code has been sent.' };
   }
+
+  const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const resetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  await this.usersService.updateById(String(user._id), {
+    verificationCode: resetCode,
+    verificationCodeExpires: resetExpires,
+  });
+
+  this.mailService
+    .sendVerificationEmail(user.email, user.name, resetCode)
+    .catch(() => {});
+
+  return { message: 'If that email is registered, a reset code has been sent.' };
+}
+
   async logout() {
   return { message: 'Logged out successfully' };
 }
