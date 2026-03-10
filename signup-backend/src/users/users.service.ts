@@ -39,7 +39,7 @@ export class UsersService{
     }
 
     async updateById(id: string, data: Partial<User>): Promise<UserDocument | null>{
-        return this.userModel.findByIdAndUpdate(id, data, { new: true }).exec();
+        return this.userModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
     }
 
     async findByEmailWithPassword(email: string): Promise<UserDocument | null> {
