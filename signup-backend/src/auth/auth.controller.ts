@@ -60,4 +60,10 @@ async login(@Body() loginDto: LoginDto){
 async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
   return this.authService.forgotPassword(forgotPasswordDto);
 }
+@Post('logout')
+@HttpCode(HttpStatus.OK)
+@UseGuards(JwtAuthGuard)
+async logout() {
+  return this.authService.logout();
+}
 }

@@ -161,4 +161,8 @@ export class AuthService {
 
     return { message: 'Password updated successfully' };
   }
+  async logout() {
+  return { message: 'Logged out successfully' };
+}
+
 }
