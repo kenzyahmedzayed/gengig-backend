@@ -4,10 +4,9 @@ import { Document } from 'mongoose';
 export type UserDocument = User & Document;
 
 export enum UserRole {
-  USER = 'user',
+  TEENLANCER = 'teenlancer',
+  AGENT = 'agent',
   ADMIN = 'admin',
-  FREELANCER = 'freelancer',
-  CLIENT = 'client',
 }
 
 @Schema({ timestamps: true })
@@ -24,14 +23,45 @@ export class User {
   @Prop({ default: false })
   isEmailVerified: boolean;
 
-  @Prop({ enum: UserRole, default: UserRole.USER })
-  role: UserRole;
+  @Prop({ enum: UserRole, default: UserRole.TEENLANCER })
+role: UserRole;
 
   @Prop({ select: false })
   verificationCode?: string;
 
   @Prop({ select: false })
   verificationCodeExpires?: Date;
+  @Prop()
+  photo?: string;
+
+  // Teenlancer fields
+  @Prop()
+  bio?: string;
+
+  @Prop()
+  education?: string;
+
+  @Prop({ type: [String], default: [] })
+  skills?: string[];
+
+  @Prop()
+  availability?: string;
+
+  @Prop()
+  rate?: number;
+
+  // Agent fields
+  @Prop()
+  company?: string;
+
+  @Prop()
+  industry?: string;
+
+  @Prop({ type: [String], default: [] })
+  workTypes?: string[];
+
+  @Prop({ default: false })
+  isOnboardingComplete?: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

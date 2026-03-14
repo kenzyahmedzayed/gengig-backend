@@ -32,6 +32,7 @@ export class AuthService {
   name: dto.name,
   email: dto.email,
   password: hashedPassword,
+  role: dto.role,
   isEmailVerified: false,
   verificationCode: verificationCode,
   verificationCodeExpires: verificationExpires,
@@ -147,14 +148,14 @@ async resetPassword(email: string, newPassword: string) {
 }
 
   private async generateAccessToken(user: UserDocument): Promise<string> {
-    return this.jwtService.signAsync(
-      { sub: String(user._id), email: user.email },
-      {
-        secret: this.config.get('JWT_ACCESS_SECRET'),
-        expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN') || '15m',
-      },
-    );
-  }
+  return this.jwtService.signAsync(
+    { sub: String(user._id), email: user.email },
+    {
+      secret: 'mysecretkey123',
+      expiresIn: '15m',
+    },
+  );
+}
 
   async login(loginDto: LoginDto){
     const { email, password } = loginDto;
