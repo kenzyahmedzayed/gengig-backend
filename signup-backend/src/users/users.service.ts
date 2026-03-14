@@ -48,5 +48,8 @@ export class UsersService{
     .select('+password')
     .exec();
 }
+async deleteById(id: string): Promise<void> {
+  await this.userModel.findByIdAndDelete(id).exec();
+}
 
 }
