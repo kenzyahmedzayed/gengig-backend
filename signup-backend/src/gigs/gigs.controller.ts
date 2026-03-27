@@ -1,16 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, HttpCode, HttpStatus,} from '@nestjs/common';
 import { GigsService } from './gigs.service';
 import { CreateGigDto } from './dto/create-gig.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
