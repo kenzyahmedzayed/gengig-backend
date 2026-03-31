@@ -104,4 +104,5 @@ export class ApplicationsService {
     application.status = status;
     return application.save();
   }
+  
 }

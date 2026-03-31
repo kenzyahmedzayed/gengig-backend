@@ -67,4 +67,20 @@ export class GigsController {
     await this.gigsService.delete(id, String(user._id));
     return { message: 'Gig deleted successfully' };
   }
+  // GET /agent/gigs
+@Get('/agent/gigs')
+@UseGuards(JwtAuthGuard)
+findAgentGigs(@CurrentUser() user: UserDocument) {
+  return this.gigsService.findByAgent(String(user._id));
+}
+
+// GET /teenlancer/gigs?status=completed
+@Get('/teenlancer/gigs')
+@UseGuards(JwtAuthGuard)
+findTeenlancerGigs(
+  @CurrentUser() user: UserDocument,
+  @Query('status') status: string,
+) {
+  return this.gigsService.findByAgent(String(user._id));
+}
 }
