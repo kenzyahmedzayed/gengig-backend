@@ -68,4 +68,5 @@ export class ApplicationsController {
   ) {
     return this.applicationsService.reset(id, String(user._id));
   }
+ 
 }
