@@ -12,7 +12,10 @@ import { ReviewsModule } from './reviews/review.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', '../.env'],
+    }),
     MongooseModule.forRoot('mongodb+srv://gengig2025_db_user:q4R2D8cABkcl9vqQ@cluster0.hgqwufd.mongodb.net/gengig-backend'),
     UsersModule,
     MailModule,

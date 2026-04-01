@@ -1,11 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChatMessage, ChatMessageDocument } from './chat.schema';
 import Groq from 'groq-sdk';
-import * as dotenv from 'dotenv';
-dotenv.config();
-
 
 const teenlancerPrompt = `
 You are Gengig Assistant for Teenlancers.
@@ -57,8 +54,14 @@ export class ChatService {
     @InjectModel(ChatMessage.name)
     private readonly chatModel: Model<ChatMessageDocument>,
   ) {
+    if (!process.env.GROQ_API_KEY) {
+      throw new InternalServerErrorException(
+        'GROQ_API_KEY is not configured',
+      );
+    }
+
     this.groq = new Groq({
-     apiKey: process.env.GROQ_API_KEY,
+      apiKey: process.env.GROQ_API_KEY,
     });
   }
 
@@ -95,7 +98,7 @@ export class ChatService {
 
     // Send to Groq AI
     const completion = await this.groq.chat.completions.create({
-model: 'llama-3.3-70b-versatile',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         { role: 'system', content: systemPrompt },
         ...chatHistory,
@@ -104,7 +107,7 @@ model: 'llama-3.3-70b-versatile',
       temperature: 0.7,
     });
 
-const aiReply = completion.choices[0].message.content ?? '';
+    const aiReply = completion.choices[0].message.content ?? '';
 
     // Save AI response to MongoDB
     await this.chatModel.create({
