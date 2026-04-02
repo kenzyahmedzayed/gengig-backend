@@ -52,14 +52,14 @@ export class ChatService {
   private groq: Groq;
 
   constructor(
-    @InjectModel(ChatMessage.name)
-    private readonly chatModel: Model<ChatMessageDocument>,
-    private readonly configService: ConfigService,
-  ) {
-    this.groq = new Groq({
-      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
-    });
-  }
+  @InjectModel(ChatMessage.name)
+  private readonly chatModel: Model<ChatMessageDocument>,
+  private readonly configService: ConfigService,
+) {
+  this.groq = new Groq({
+    apiKey: this.configService.getOrThrow<string>('GROQ_API_KEY'),
+  });
+}
 
   async sendMessage(
     userId: string,
