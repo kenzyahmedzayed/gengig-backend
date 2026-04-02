@@ -1,5 +1,6 @@
+import 'dotenv/config';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -12,24 +13,8 @@ import { ReviewsModule } from './reviews/review.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: ['.env', '../.env'],
-    }),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        const uri = configService.get<string>('MONGO_URI');
-
-        if (!uri) {
-          throw new Error('MONGO_URI is not configured');
-        }
-
-        return {
-          uri,
-        };
-      },
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
+    MongooseModule.forRoot('mongodb+srv://gengig_db_user:gengig1004@cluster0.ijnyk5x.mongodb.net/gengig-backend?appName=Cluster0'),
     UsersModule,
     MailModule,
     AuthModule,

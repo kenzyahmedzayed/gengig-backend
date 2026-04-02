@@ -1,4 +1,5 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChatMessage, ChatMessageDocument } from './chat.schema';
@@ -53,15 +54,10 @@ export class ChatService {
   constructor(
     @InjectModel(ChatMessage.name)
     private readonly chatModel: Model<ChatMessageDocument>,
+    private readonly configService: ConfigService,
   ) {
-    if (!process.env.GROQ_API_KEY) {
-      throw new InternalServerErrorException(
-        'GROQ_API_KEY is not configured',
-      );
-    }
-
     this.groq = new Groq({
-      apiKey: process.env.GROQ_API_KEY,
+      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
     });
   }
 
@@ -71,7 +67,6 @@ export class ChatService {
     message: string,
     userType: 'teenlancer' | 'agent',
   ) {
-    // Save user message to MongoDB
     await this.chatModel.create({
       sessionId,
       userId,
@@ -80,23 +75,19 @@ export class ChatService {
       userType,
     });
 
-    // Get conversation history
     const history = await this.chatModel
       .find({ sessionId, userId })
       .sort({ createdAt: 1 })
       .exec();
 
-    // Choose prompt based on user type
     const systemPrompt =
       userType === 'teenlancer' ? teenlancerPrompt : agentPrompt;
 
-    // Build chat history for Groq
     const chatHistory = history.map((msg) => ({
       role: msg.role as 'user' | 'assistant',
       content: msg.content,
     }));
 
-    // Send to Groq AI
     const completion = await this.groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
@@ -109,7 +100,6 @@ export class ChatService {
 
     const aiReply = completion.choices[0].message.content ?? '';
 
-    // Save AI response to MongoDB
     await this.chatModel.create({
       sessionId,
       userId,
