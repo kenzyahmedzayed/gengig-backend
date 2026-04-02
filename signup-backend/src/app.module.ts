@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -16,7 +16,20 @@ import { ReviewsModule } from './reviews/review.module';
       isGlobal: true,
       envFilePath: ['.env', '../.env'],
     }),
-    MongooseModule.forRoot('mongodb+srv://gengig2025_db_user:q4R2D8cABkcl9vqQ@cluster0.hgqwufd.mongodb.net/gengig-backend'),
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGO_URI');
+
+        if (!uri) {
+          throw new Error('MONGO_URI is not configured');
+        }
+
+        return {
+          uri,
+        };
+      },
+    }),
     UsersModule,
     MailModule,
     AuthModule,

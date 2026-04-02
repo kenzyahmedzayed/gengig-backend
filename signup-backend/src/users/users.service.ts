@@ -51,5 +51,23 @@ export class UsersService{
 async deleteById(id: string): Promise<void> {
   await this.userModel.findByIdAndDelete(id).exec();
 }
+async getTeenlancerStats(userId: string): Promise<any> {
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) throw new Error('User not found');
 
+  return {
+    totalEarnings: 0,
+    activeGigs: 0,
+    completedGigs: 0,
+    rating: 0,
+    totalReviews: 0,
+  };
+}
+
+async getTeenlancerActivity(userId: string): Promise<any> {
+  return {
+    activities: [],
+    message: 'No recent activity',
+  };
+}
 }
