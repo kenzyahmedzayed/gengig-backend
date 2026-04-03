@@ -83,4 +83,33 @@ findTeenlancerGigs(
 ) {
   return this.gigsService.findByAgent(String(user._id));
 }
+// GET /gigs/recommended
+@Get('recommended')
+@UseGuards(JwtAuthGuard)
+getRecommended(@CurrentUser() user: UserDocument) {
+  return this.gigsService.getRecommended(String(user._id));
+}
+
+// GET /gigs/related/:id
+@Get('related/:id')
+getRelated(@Param('id') id: string) {
+  return this.gigsService.getRelated(id);
+}
+
+// GET /gigs/category/:category
+@Get('category/:category')
+getByCategory(@Param('category') category: string) {
+  return this.gigsService.findAll({ category });
+}
+
+// POST /gigs/:id/save
+@Post(':id/save')
+@UseGuards(JwtAuthGuard)
+@HttpCode(HttpStatus.OK)
+saveGig(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+) {
+  return this.gigsService.saveGig(id, String(user._id));
+}
 }

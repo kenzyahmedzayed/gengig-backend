@@ -70,4 +70,64 @@ async getTeenlancerActivity(userId: string): Promise<any> {
     message: 'No recent activity',
   };
 }
+async getTeenlancerDashboard(userId: string): Promise<any> {
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) throw new Error('User not found');
+
+  return {
+    activeGigs: 0,
+    completedGigs: 0,
+    recentActivity: [],
+    user: {
+      name: user.name,
+      photo: user.photo,
+      role: user.role,
+    }
+  };
+}
+
+async getAgentDashboard(userId: string): Promise<any> {
+  const user = await this.userModel.findById(userId).exec();
+  if (!user) throw new Error('User not found');
+
+  return {
+    activeGigs: 0,
+    completedGigs: 0,
+    recentApplications: [],
+    spendingSummary: {
+      totalSpent: 0,
+      thisMonth: 0,
+    },
+    user: {
+      name: user.name,
+      photo: user.photo,
+      role: user.role,
+    }
+  };
+}
+async getPlatformStats(): Promise<any> {
+  const totalTeenlancers = await this.userModel.countDocuments({ role: 'teenlancer' }).exec();
+  const totalAgents = await this.userModel.countDocuments({ role: 'agent' }).exec();
+
+  return {
+    totalTeenlancers,
+    totalAgents,
+    totalGigs: 0,
+    avgRating: 4.8,
+  };
+}
+async getTeenlancers(query: any): Promise<any> {
+  const filter: any = { role: 'teenlancer' };
+
+  if (query.skill) {
+    filter.skills = { $in: [query.skill] };
+  }
+
+  const teenlancers = await this.userModel
+    .find(filter)
+    .select('name photo bio skills availability rate')
+    .exec();
+
+  return teenlancers;
+}
 }

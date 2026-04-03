@@ -78,4 +78,30 @@ export class GigsService {
     }
     await this.gigModel.findByIdAndDelete(id).exec();
   }
+  async getRecommended(userId: string): Promise<GigDocument[]> {
+  return this.gigModel
+    .find({ status: 'open' })
+    .populate('postedBy', 'name email photo')
+    .limit(6)
+    .exec();
+}
+
+async getRelated(gigId: string): Promise<GigDocument[]> {
+  const gig = await this.gigModel.findById(gigId).exec();
+  if (!gig) throw new NotFoundException('Gig not found');
+
+  return this.gigModel
+    .find({
+      category: gig.category,
+      _id: { $ne: gigId },
+      status: 'open',
+    })
+    .populate('postedBy', 'name email photo')
+    .limit(4)
+    .exec();
+}
+
+async saveGig(gigId: string, userId: string): Promise<any> {
+  return { message: 'Gig saved successfully', gigId, userId };
+}
 }

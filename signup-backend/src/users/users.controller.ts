@@ -1,11 +1,10 @@
-import { Controller, Post, Put, Get, Delete, Body, UseGuards, HttpCode, HttpStatus,} from '@nestjs/common';
+import { Controller, Post, Put, Get, Delete, Body, UseGuards, HttpCode, HttpStatus, Param, Query, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UsersService } from './users.service';
 import { TeenlancerOnboardingDto } from './dto/teenlancer-onboarding.dto';
 import { AgentOnboardingDto } from './dto/agent-onboarding.dto';
 import type { UserDocument } from './users.schema';
-import { UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudinary } from './cloudinary.config';
 
@@ -75,6 +74,11 @@ updateSettings(
     email: dto.email,
   });
 }
+// GET /users/settings
+@Get('settings')
+getSettings(@CurrentUser() user: UserDocument) {
+  return this.usersService.findById(String(user._id));
+}
 
 // PUT /users/notifications
 @Put('notifications')
@@ -138,5 +142,27 @@ getTeenlancerStats(@CurrentUser() user: UserDocument) {
 getTeenlancerActivity(@CurrentUser() user: UserDocument) {
   return this.usersService.getTeenlancerActivity(String(user._id));
 }
+// GET /teenlancer/dashboard
+@Get('teenlancer/dashboard')
+@UseGuards(JwtAuthGuard)
+getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
+  return this.usersService.getTeenlancerDashboard(String(user._id));
+}
 
+// GET /agent/dashboard
+@Get('agent/dashboard')
+@UseGuards(JwtAuthGuard)
+getAgentDashboard(@CurrentUser() user: UserDocument) {
+  return this.usersService.getAgentDashboard(String(user._id));
+}
+// GET /platform/stats
+@Get('platform/stats')
+getPlatformStats() {
+  return this.usersService.getPlatformStats();
+}
+// GET /users/teenlancers
+@Get('teenlancers')
+getTeenlancers(@Query() query: any) {
+  return this.usersService.getTeenlancers(query);
+}
 }
