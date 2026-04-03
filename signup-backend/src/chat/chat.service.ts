@@ -56,9 +56,7 @@ export class ChatService {
   private readonly chatModel: Model<ChatMessageDocument>,
   private readonly configService: ConfigService,
 ) {
-  this.groq = new Groq({
-    apiKey: this.configService.getOrThrow<string>('GROQ_API_KEY'),
-  });
+  this.configService.get<string>('GROQ_API_KEY');
 }
 
   async sendMessage(
