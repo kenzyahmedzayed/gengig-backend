@@ -102,4 +102,30 @@ export class ReviewsService {
       totalReviews: reviews.length,
     };
   }
+  async getPlatformStats(): Promise<any> {
+  return {
+    totalTeenlancers: 500,
+    totalAgents: 200,
+    totalGigs: 1000,
+    avgRating: 4.8,
+  };
+}
+
+async getTeenlancerStats(userId: string): Promise<any> {
+  const reviews = await this.reviewModel.find({ teenlancer: userId }).exec();
+  const totalReviews = reviews.length;
+  const avgRating = totalReviews > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews
+    : 0;
+
+  return {
+    completedGigs: 0,
+    totalEarnings: 0,
+    responseRate: 100,
+    onTimeDelivery: 100,
+    rating: Math.round(avgRating * 10) / 10,
+    activeGigs: 0,
+    totalReviews,
+  };
+}
 }

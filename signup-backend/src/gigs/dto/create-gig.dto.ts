@@ -1,26 +1,33 @@
-import { IsString, IsNumber, IsArray, IsOptional, IsEnum, MinLength, Min,} from 'class-validator';
-import { GigStatus } from '../gig.schema';
+import { IsString, IsArray, IsOptional, MinLength } from 'class-validator';
 
 export class CreateGigDto {
   @IsString()
-  @MinLength(5, { message: 'Title must be at least 5 characters' })
+  @MinLength(5)
   title: string;
 
   @IsString()
-  @MinLength(20, { message: 'Description must be at least 20 characters' })
+  @MinLength(20)
   description: string;
 
   @IsString()
   category: string;
 
-  @IsNumber()
-  @Min(1, { message: 'Budget must be at least 1' })
-  budget: number;
-
   @IsString()
-  duration: string;
+  budget: string;
+
+  @IsOptional()
+  @IsString()
+  duration?: string;
+
+  @IsOptional()
+  @IsString()
+  deadline?: string;
 
   @IsOptional()
   @IsArray()
   skills?: string[];
+
+  @IsOptional()
+  @IsArray()
+  requirements?: string[];
 }

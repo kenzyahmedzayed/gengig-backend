@@ -61,4 +61,16 @@ export class ReviewsController {
   getTeenlancerRating(@Param('id') id: string) {
     return this.reviewsService.getTeenlancerRating(id);
   }
+  // GET /platform/stats
+@Get('platform/stats')
+getPlatformStats() {
+  return this.reviewsService.getPlatformStats();
+}
+
+// GET /teenlancer/stats
+@Get('teenlancer/stats')
+@UseGuards(JwtAuthGuard)
+getTeenlancerStats(@CurrentUser() user: UserDocument) {
+  return this.reviewsService.getTeenlancerStats(String(user._id));
+}
 }

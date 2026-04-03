@@ -123,11 +123,29 @@ async getTeenlancers(query: any): Promise<any> {
     filter.skills = { $in: [query.skill] };
   }
 
+  if (query.search) {
+    filter.$or = [
+      { name: { $regex: query.search, $options: 'i' } },
+      { skills: { $in: [new RegExp(query.search, 'i')] } },
+    ];
+  }
+
+  const limit = query.limit ? parseInt(query.limit) : 10;
+
   const teenlancers = await this.userModel
     .find(filter)
-    .select('name photo bio skills availability rate')
+    .select('name photo skills bio rate availability')
+    .limit(limit)
     .exec();
 
-  return teenlancers;
+  return teenlancers.map(t => ({
+    id: String(t._id),
+    name: t.name,
+    photo: t.photo || '',
+    skills: t.skills || [],
+    bio: t.bio || '',
+    rate: t.rate || 0,
+    availability: t.availability || '',
+  }));
 }
 }

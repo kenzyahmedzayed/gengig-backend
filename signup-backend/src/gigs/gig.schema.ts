@@ -5,6 +5,7 @@ export type GigDocument = Gig & Document;
 
 export enum GigStatus {
   OPEN = 'open',
+  ACTIVE = 'active',
   CLOSED = 'closed',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
@@ -22,18 +23,23 @@ export class Gig {
   category: string;
 
   @Prop({ required: true })
-  budget: number;
+  budget: string;
 
-  @Prop({ required: true })
-  duration: string;
+  @Prop()
+  duration?: string;
+
+  @Prop()
+  deadline?: string;
 
   @Prop({ type: [String], default: [] })
   skills: string[];
 
-  @Prop({ enum: GigStatus, default: GigStatus.OPEN })
-  status: GigStatus;
+  @Prop({ type: [String], default: [] })
+  requirements: string[];
 
-  // The agent who posted the gig
+  @Prop({ enum: GigStatus, default: GigStatus.OPEN })
+  status: string;
+
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   postedBy: Types.ObjectId;
 

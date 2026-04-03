@@ -11,13 +11,26 @@ export class GigsService {
   ) {}
 
   // Create a new gig
-  async create(agentId: string, dto: CreateGigDto): Promise<GigDocument> {
-    const gig = new this.gigModel({
-      ...dto,
-      postedBy: agentId,
-    });
-    return gig.save();
-  }
+  async create(agentId: string, dto: CreateGigDto): Promise<any> {
+  const gig = new this.gigModel({
+    ...dto,
+    postedBy: agentId,
+    status: 'active',
+  });
+  const saved = await gig.save();
+  return {
+    success: true,
+    gig: {
+      id: saved._id,
+      title: saved.title,
+      category: saved.category,
+      budget: saved.budget,
+      deadline: saved.deadline || saved.duration,
+      status: saved.status,
+      createdAt: (saved as any).createdAt,
+    }
+  };
+}
 
   // Get all gigs with optional filters
   async findAll(query: any = {}): Promise<GigDocument[]> {
