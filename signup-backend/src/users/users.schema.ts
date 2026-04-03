@@ -65,6 +65,13 @@ notificationPreferences?: Record<string, boolean>;
 
   @Prop({ default: false })
   isOnboardingComplete?: boolean;
+  
+  @Prop({ type: [Object], default: [] })
+portfolio?: Array<{
+  title: string;
+  category: string;
+  img: string;
+}>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

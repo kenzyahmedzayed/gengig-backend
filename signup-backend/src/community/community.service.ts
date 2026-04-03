@@ -13,14 +13,24 @@ export class CommunityService {
   ) {}
 
   // Get all posts
-  async findAll(): Promise<CommunityPostDocument[]> {
-    return this.postModel
-      .find()
-      .populate('author', 'name photo role')
-      .populate('comments.author', 'name photo')
-      .sort({ createdAt: -1 })
-      .exec();
-  }
+ async findAll(): Promise<any[]> {
+  const posts = await this.postModel
+    .find()
+    .populate('author', 'name photo role')
+    .populate('comments.author', 'name photo')
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return posts.map(post => ({
+    ...post.toObject(),
+    user: {
+      id: String((post.author as any)._id),
+      name: (post.author as any).name,
+      photo: (post.author as any).photo || '',
+      role: (post.author as any).role,
+    },
+  }));
+}
 
   // Create a new post — only teenlancers
   async create(
@@ -96,28 +106,31 @@ export class CommunityService {
 
   // Get active members
   async getActiveMembers() {
-    return this.postModel.aggregate([
-      { $group: { _id: '$author', postCount: { $sum: 1 } } },
-      { $sort: { postCount: -1 } },
-      { $limit: 10 },
-      {
-        $lookup: {
-          from: 'users',
-          localField: '_id',
-          foreignField: '_id',
-          as: 'user',
-        },
+  const members = await this.postModel.aggregate([
+    { $group: { _id: '$author', postCount: { $sum: 1 } } },
+    { $sort: { postCount: -1 } },
+    { $limit: 10 },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user',
       },
-      { $unwind: '$user' },
-      {
-        $project: {
-          name: '$user.name',
-          photo: '$user.photo',
-          postCount: 1,
-        },
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        id: { $toString: '$user._id' },
+        name: '$user.name',
+        photo: '$user.photo',
+        postCount: 1,
       },
-    ]);
-  }
+    },
+  ]);
+
+  return members;
+}
 
   // Get trending tags
   async getTrendingTags() {

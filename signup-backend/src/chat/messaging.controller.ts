@@ -65,4 +65,16 @@ export class MessagingController {
   ) {
     return this.messagingService.markAsRead(String(user._id), otherUserId);
   }
+  // POST /chat/conversations
+@Post('conversations')
+@HttpCode(HttpStatus.OK)
+async createConversation(
+  @CurrentUser() user: UserDocument,
+  @Body() body: any,
+) {
+  return this.messagingService.createConversation(
+    String(user._id),
+    body.userId,
+  );
+}
 }
