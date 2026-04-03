@@ -173,40 +173,43 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   return this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
-      secret: 'mysecretkey123',
-      expiresIn: '15m',
+      secret: this.config.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+      expiresIn: '7d',
     },
   );
 }
 
-  async login(loginDto: LoginDto){
-    const { email, password } = loginDto;
-    const user = await this.usersService.findByEmailWithPassword(email);
-    if (!user) { 
-      throw new UnauthorizedException('Invalid email or password');
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid){
-      throw new UnauthorizedException('Invalid email or password');
-    }
-    const payload = { email: user.email, sub: user._id };
-    const token = await this.jwtService.signAsync(payload, {
-  secret: 'mysecretkey123',
-  expiresIn: '15m',
-});
+  async login(loginDto: LoginDto) {
+  const { email, password } = loginDto;
+  const user = await this.usersService.findByEmailWithPassword(email);
+  if (!user) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new UnauthorizedException('Invalid email or password');
+  }
 
-    return {
-  message: 'Login Successful',
-  token: token,
-  role: user.role,
-  user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
+  const token = await this.jwtService.signAsync(
+    { sub: String(user._id), email: user.email },
+    {
+      secret: this.config.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+      expiresIn: '7d',
+    },
+  );
+
+  return {
+    message: 'Login Successful',
+    token: token,
     role: user.role,
-  }
-};
-  }
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    }
+  };
+}
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
   const { email } = forgotPasswordDto;
