@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get,Put, Body, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
 import { IsEmail, IsString } from "class-validator";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
@@ -32,6 +32,13 @@ class VerifyResetCodeDto {
 class ResetPasswordDto {
   @IsEmail()
   email: string;
+
+  @IsString()
+  newPassword: string;
+}
+class ChangePasswordDto {
+  @IsString()
+  currentPassword: string;
 
   @IsString()
   newPassword: string;
@@ -87,6 +94,20 @@ verifyResetCode(@Body() dto: VerifyResetCodeDto) {
 @HttpCode(HttpStatus.OK)
 resetPassword(@Body() dto: ResetPasswordDto) {
   return this.authService.resetPassword(dto.email, dto.newPassword);
+}
+// PUT /auth/change-password
+@Put('change-password')
+@HttpCode(HttpStatus.OK)
+@UseGuards(JwtAuthGuard)
+changePassword(
+  @CurrentUser() user: UserDocument,
+  @Body() dto: ChangePasswordDto,
+) {
+  return this.authService.changePassword(
+    String(user._id),
+    dto.currentPassword,
+    dto.newPassword,
+  );
 }
 @Post('logout')
 @HttpCode(HttpStatus.OK)

@@ -146,7 +146,29 @@ async resetPassword(email: string, newPassword: string) {
 
   return { message: 'Password reset successfully' };
 }
+async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  const user = await this.usersService.findById(userId);
 
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+
+  const userWithPassword = await this.usersService.findByEmailWithPassword(user.email);
+
+  if (!userWithPassword) {
+    throw new NotFoundException('User not found');
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, userWithPassword.password);
+  if (!isPasswordValid) {
+    throw new BadRequestException('Current password is incorrect');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await this.usersService.updateById(userId, { password: hashedPassword });
+
+  return { message: 'Password changed successfully' };
+}
   private async generateAccessToken(user: UserDocument): Promise<string> {
   return this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },

@@ -34,6 +34,9 @@ role: UserRole;
   @Prop()
   photo?: string;
 
+  @Prop({ type: Object, default: {} })
+notificationPreferences?: Record<string, boolean>;
+
   // Teenlancer fields
   @Prop()
   bio?: string;
