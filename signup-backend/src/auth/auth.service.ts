@@ -199,16 +199,27 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   );
 
   return {
-    message: 'Login Successful',
-    token: token,
+  message: 'Login Successful',
+  token: token,
+  role: user.role,
+  name: user.name,
+  email: user.email,
+  photo: user.photo || '',
+  bio: user.bio || '',
+  skills: user.skills || [],
+  hourlyRate: user.rate || 0,
+  availability: user.availability || '',
+  location: '',
+  company: user.company || '',
+  industry: user.industry || '',
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
     role: user.role,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    }
-  };
+    photo: user.photo || '',
+  }
+};
 }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {

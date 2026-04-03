@@ -104,5 +104,42 @@ export class ApplicationsService {
     application.status = status;
     return application.save();
   }
-  
+  async getTeenlancerDashboard(userId: string): Promise<any> {
+  const applications = await this.applicationModel
+    .find({ appliedBy: userId })
+    .populate('gig')
+    .exec();
+
+  const activeGigs = applications.filter(a => a.status === 'accepted').length;
+  const completedGigs = applications.filter(a => (a.status as string) === 'completed').length;
+  return {
+    activeGigs,
+    completedGigs,
+    recentActivity: applications.slice(0, 5),
+  };
+}
+
+async getAgentDashboard(userId: string): Promise<any> {
+  const applications = await this.applicationModel
+    .find()
+    .populate({
+      path: 'gig',
+      match: { postedBy: userId },
+    })
+    .exec()
+    .then(apps => apps.filter(app => app.gig !== null));
+
+  const activeGigs = applications.filter(a => a.status === 'pending').length;
+  const completedGigs = applications.filter(a => a.status === 'accepted').length;
+
+  return {
+    activeGigs,
+    completedGigs,
+    recentApplications: applications.slice(0, 5),
+    spendingSummary: {
+      totalSpent: 0,
+      thisMonth: 0,
+    },
+  };
+}
 }

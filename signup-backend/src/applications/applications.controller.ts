@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Param, Body, UseGuards, HttpCode, HttpStatus,} from '@nestjs/common';
+import { Controller, Post, Get, Put, Param, Body, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -68,5 +68,17 @@ export class ApplicationsController {
   ) {
     return this.applicationsService.reset(id, String(user._id));
   }
- 
+ // GET /teenlancer/dashboard
+@Get('teenlancer/dashboard')
+@UseGuards(JwtAuthGuard)
+getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
+  return this.applicationsService.getTeenlancerDashboard(String(user._id));
+}
+
+// GET /agent/dashboard
+@Get('agent/dashboard')
+@UseGuards(JwtAuthGuard)
+getAgentDashboard(@CurrentUser() user: UserDocument) {
+  return this.applicationsService.getAgentDashboard(String(user._id));
+}
 }

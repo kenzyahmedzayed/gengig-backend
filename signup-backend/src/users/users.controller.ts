@@ -165,4 +165,30 @@ getPlatformStats() {
 getTeenlancers(@Query() query: any) {
   return this.usersService.getTeenlancers(query);
 }
+// POST /uploads/image
+@Post('/uploads/image')
+@UseInterceptors(FileInterceptor('image'))
+async uploadImage(
+  @UploadedFile() file: Express.Multer.File,
+) {
+  if (!file) {
+    throw new BadRequestException('No file uploaded');
+  }
+
+  const result = await new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        folder: 'gengig/community',
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      },
+    ).end(file.buffer);
+  });
+
+  return {
+    url: (result as any).secure_url,
+  };
+}
 }
