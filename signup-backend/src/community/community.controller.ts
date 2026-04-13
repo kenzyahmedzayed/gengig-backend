@@ -19,6 +19,14 @@ import type { UserDocument } from '../users/users.schema';
 export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}
 
+  private normalizeCreatePostDto(body: any): CreatePostDto {
+    return {
+      content: body.content ?? body.text ?? body.postContent ?? '',
+      image: body.image ?? body.imageUrl ?? body.photo ?? undefined,
+      tags: body.tags,
+    };
+  }
+
   // GET /community/posts — public
   @Get('posts')
   findAll() {
@@ -43,12 +51,12 @@ export class CommunityController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserDocument,
-    @Body() dto: CreatePostDto,
+    @Body() body: any,
   ) {
     return this.communityService.create(
       String(user._id),
       user.role,
-      dto,
+      this.normalizeCreatePostDto(body),
     );
   }
 
