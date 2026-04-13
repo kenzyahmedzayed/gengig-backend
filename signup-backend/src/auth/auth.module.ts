@@ -1,17 +1,33 @@
-import { Module } from "@nestjs/common";
-import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtStrategy } from "./strategies/jwt.strategy";
-import { UsersModule } from "src/users/users.module";
-import { MailModule } from "../mail/mail.module";
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { UsersModule } from 'src/users/users.module';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
     imports: [
-        UsersModule, MailModule, PassportModule, JwtModule.register({
-            secret: process.env.JWT_SECRET,
-            signOptions: { expiresIn: '7d' },
+        ConfigModule,
+        UsersModule,
+        MailModule,
+        PassportModule,
+        JwtModule.registerAsync({
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => {
+                const expiresIn =
+                  configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '7d';
+
+                return {
+                    secret:
+                      configService.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+                    signOptions: {
+                      expiresIn: expiresIn as any,
+                    },
+                };
+            },
         }),
     ],
 controllers: [AuthController],

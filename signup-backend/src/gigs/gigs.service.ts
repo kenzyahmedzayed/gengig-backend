@@ -15,18 +15,36 @@ export class GigsService {
   const gig = new this.gigModel({
     ...dto,
     postedBy: agentId,
-    status: 'active',
+    status: 'open',
   });
   const saved = await gig.save();
   return {
     success: true,
+    message: 'Gig created successfully',
+    id: saved._id,
+    title: saved.title,
+    description: saved.description,
+    category: saved.category,
+    budget: saved.budget,
+    duration: saved.duration,
+    deadline: saved.deadline || saved.duration,
+    skills: saved.skills || [],
+    requirements: saved.requirements || [],
+    status: saved.status,
+    postedBy: saved.postedBy,
+    createdAt: (saved as any).createdAt,
     gig: {
       id: saved._id,
       title: saved.title,
+      description: saved.description,
       category: saved.category,
       budget: saved.budget,
+      duration: saved.duration,
       deadline: saved.deadline || saved.duration,
+      skills: saved.skills || [],
+      requirements: saved.requirements || [],
       status: saved.status,
+      postedBy: saved.postedBy,
       createdAt: (saved as any).createdAt,
     }
   };
@@ -34,7 +52,13 @@ export class GigsService {
 
   // Get all gigs with optional filters
   async findAll(query: any = {}): Promise<GigDocument[]> {
-    const filter: any = { status: 'open' };
+    const filter: any = {};
+
+    if (!query.status) {
+      filter.status = 'open';
+    } else {
+      filter.status = query.status;
+    }
 
     if (query.category) filter.category = query.category;
     if (query.budget) filter.budget = { $lte: Number(query.budget) };
