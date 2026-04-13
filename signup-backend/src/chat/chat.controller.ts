@@ -8,6 +8,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -33,13 +34,39 @@ class SendMessageDto {
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
+  private normalizeSendMessageDto(body: any, user: UserDocument) {
+    const message = body.message ?? body.content ?? body.text ?? '';
+    const sessionId = body.sessionId ?? body.conversationId ?? body.chatId;
+    const userType = body.userType ?? user.role;
+
+    if (!message || typeof message !== 'string') {
+      throw new BadRequestException('Message is required');
+    }
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      throw new BadRequestException('sessionId is required');
+    }
+
+    if (userType !== 'teenlancer' && userType !== 'agent') {
+      throw new BadRequestException('userType must be teenlancer or agent');
+    }
+
+    return {
+      message,
+      sessionId,
+      userType,
+    } as SendMessageDto;
+  }
+
   // POST /chat/send
   @Post('send')
   @HttpCode(HttpStatus.OK)
   sendMessage(
     @CurrentUser() user: UserDocument,
-    @Body() dto: SendMessageDto,
+    @Body() body: any,
   ) {
+    const dto = this.normalizeSendMessageDto(body, user);
+
     return this.chatService.sendMessage(
       String(user._id),
       dto.sessionId,
