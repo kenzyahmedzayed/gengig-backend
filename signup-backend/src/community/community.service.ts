@@ -12,42 +12,57 @@ export class CommunityService {
     private readonly postModel: Model<CommunityPostDocument>,
   ) {}
 
-  // Get all posts
- async findAll(): Promise<any[]> {
-  const posts = await this.postModel
-    .find()
-    .populate('author', 'name photo role')
-    .populate('comments.author', 'name photo')
-    .sort({ createdAt: -1 })
-    .exec();
+  private formatPost(post: any) {
+    const author = post.author as any;
 
-  return posts.map(post => ({
-    ...post.toObject(),
-    user: {
-      id: String((post.author as any)._id),
-      name: (post.author as any).name,
-      photo: (post.author as any).photo || '',
-      role: (post.author as any).role,
-    },
-  }));
-}
+    return {
+      ...post.toObject(),
+      user: author
+        ? {
+            id: String(author._id),
+            name: author.name,
+            photo: author.photo || '',
+            role: author.role,
+          }
+        : null,
+    };
+  }
+
+  // Get all posts
+  async findAll(): Promise<any[]> {
+    const posts = await this.postModel
+      .find()
+      .populate('author', 'name photo role')
+      .populate('comments.author', 'name photo')
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return posts.map((post) => this.formatPost(post));
+  }
 
   // Create a new post — only teenlancers
   async create(
     userId: string,
     userRole: string,
     dto: CreatePostDto,
-  ): Promise<CommunityPostDocument> {
+  ): Promise<any> {
     if (userRole !== 'teenlancer') {
       throw new ForbiddenException('Only teenlancers can create community posts');
     }
 
     const post = new this.postModel({
       ...dto,
+      content: dto.content.trim(),
       author: userId,
     });
 
-    return post.save();
+    const savedPost = await post.save();
+    const populatedPost = await savedPost.populate([
+      { path: 'author', select: 'name photo role' },
+      { path: 'comments.author', select: 'name photo' },
+    ]);
+
+    return this.formatPost(populatedPost);
   }
 
   // Like or unlike a post

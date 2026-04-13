@@ -44,6 +44,9 @@ notificationPreferences?: Record<string, boolean>;
   @Prop()
   education?: string;
 
+  @Prop()
+  location?: string;
+
   @Prop({ type: [String], default: [] })
   skills?: string[];
 

@@ -13,6 +13,28 @@ import { cloudinary } from './cloudinary.config';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  private normalizeUserUpdate(dto: any) {
+    return {
+      ...(dto.name !== undefined ? { name: dto.name } : {}),
+      ...(dto.email !== undefined ? { email: dto.email } : {}),
+      ...(dto.photo !== undefined ? { photo: dto.photo } : {}),
+      ...(dto.bio !== undefined ? { bio: dto.bio } : {}),
+      ...(dto.education !== undefined ? { education: dto.education } : {}),
+      ...(dto.location !== undefined ? { location: dto.location } : {}),
+      ...(dto.skills !== undefined ? { skills: dto.skills } : {}),
+      ...(dto.availability !== undefined ? { availability: dto.availability } : {}),
+      ...(dto.rate !== undefined ? { rate: dto.rate } : {}),
+      ...(dto.hourlyRate !== undefined ? { rate: dto.hourlyRate } : {}),
+      ...(dto.company !== undefined ? { company: dto.company } : {}),
+      ...(dto.industry !== undefined ? { industry: dto.industry } : {}),
+      ...(dto.workTypes !== undefined ? { workTypes: dto.workTypes } : {}),
+      ...(dto.portfolio !== undefined ? { portfolio: dto.portfolio } : {}),
+      ...(dto.notificationPreferences !== undefined
+        ? { notificationPreferences: dto.notificationPreferences }
+        : {}),
+    };
+  }
+
   // GET /users/profile
   @Get('profile')
   getProfile(@CurrentUser() user: UserDocument) {
@@ -50,9 +72,12 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   updateProfile(
     @CurrentUser() user: UserDocument,
-    @Body() dto: Partial<TeenlancerOnboardingDto & AgentOnboardingDto>,
+    @Body() dto: any,
   ) {
-    return this.usersService.updateById(String(user._id), dto);
+    return this.usersService.updateById(
+      String(user._id),
+      this.normalizeUserUpdate(dto),
+    );
   }
 
   // DELETE /users/account
@@ -69,10 +94,10 @@ updateSettings(
   @CurrentUser() user: UserDocument,
   @Body() dto: any,
 ) {
-  return this.usersService.updateById(String(user._id), {
-    name: dto.name,
-    email: dto.email,
-  });
+  return this.usersService.updateById(
+    String(user._id),
+    this.normalizeUserUpdate(dto),
+  );
 }
 // GET /users/settings
 @Get('settings')
