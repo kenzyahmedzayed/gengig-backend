@@ -6,19 +6,19 @@ export type ChatMessageDocument = ChatMessage & Document;
 @Schema({ timestamps: true })
 export class ChatMessage {
   @Prop({ required: true })
-  sessionId: string;
+  sessionId!: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true, enum: ['user', 'assistant'] })
-  role: string;
+  role!: string;
 
   @Prop({ required: true })
-  content: string;
+  content!: string;
 
   @Prop({ required: true, enum: ['teenlancer', 'agent'] })
-  userType: string;
+  userType!: string;
 }
 
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);
