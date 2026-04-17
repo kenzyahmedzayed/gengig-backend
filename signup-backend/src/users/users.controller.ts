@@ -7,6 +7,7 @@ import { AgentOnboardingDto } from './dto/agent-onboarding.dto';
 import type { UserDocument } from './users.schema';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudinary } from './cloudinary.config';
+import { memoryStorage } from 'multer';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -68,17 +69,21 @@ export class UsersController {
   }
 
   // PUT /users/profile
-  @Put('profile')
-  @HttpCode(HttpStatus.OK)
-  updateProfile(
-    @CurrentUser() user: UserDocument,
-    @Body() dto: any,
-  ) {
-    return this.usersService.updateById(
-      String(user._id),
-      this.normalizeUserUpdate(dto),
-    );
+@Put('profile')
+@HttpCode(HttpStatus.OK)
+updateProfile(
+  @CurrentUser() user: UserDocument,
+  @Body() dto: any,
+) {
+  const normalized = this.normalizeUserUpdate(dto);
+  
+  // Only save photo if it's a real URL, not base64
+  if (normalized.photo && !normalized.photo.startsWith('http')) {
+    delete normalized.photo;
   }
+  
+  return this.usersService.updateById(String(user._id), normalized);
+}
 
   // DELETE /users/account
   @Delete('account')
@@ -133,7 +138,7 @@ async uploadPhoto(
     cloudinary.uploader.upload_stream(
       {
         folder: 'gengig/profiles',
-        transformation: [{ width: 400, height: 400, crop: 'fill' }],
+        transformation: [{ width: 400, height: 400, crop: 'fill', quality: 'auto' }],
       },
       (error, result) => {
         if (error) reject(error);
@@ -149,10 +154,11 @@ async uploadPhoto(
     photo: photoUrl,
   });
 
-  return {
-    message: 'Photo uploaded successfully',
-    photoUrl,
-  };
+ return {
+  message: 'Photo uploaded successfully',
+  photoUrl,
+  url: photoUrl,
+};
 }
 // GET /teenlancer/stats
 @Get('teenlancer/stats')

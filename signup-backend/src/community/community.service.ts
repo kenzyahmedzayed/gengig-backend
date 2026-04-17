@@ -30,15 +30,25 @@ export class CommunityService {
 
   // Get all posts
   async findAll(): Promise<any[]> {
-    const posts = await this.postModel
-      .find()
-      .populate('author', 'name photo role')
-      .populate('comments.author', 'name photo')
-      .sort({ createdAt: -1 })
-      .exec();
+  const posts = await this.postModel
+    .find()
+    .populate('author', 'name photo role')
+    .populate('comments.author', 'name photo')
+    .sort({ createdAt: -1 })
+    .exec();
 
-    return posts.map((post) => this.formatPost(post));
-  }
+  return posts
+    .filter(post => post.author != null)
+    .map(post => ({
+      ...post.toObject(),
+      user: {
+        id: String((post.author as any)._id),
+        name: (post.author as any).name || 'Unknown User',
+        photo: (post.author as any).photo || '',
+        role: (post.author as any).role || 'teenlancer',
+      },
+    }));
+}
 
   // Create a new post — only teenlancers
   async create(
@@ -120,7 +130,7 @@ export class CommunityService {
   }
 
   // Get active members
-  async getActiveMembers() {
+async getActiveMembers() {
   const members = await this.postModel.aggregate([
     { $group: { _id: '$author', postCount: { $sum: 1 } } },
     { $sort: { postCount: -1 } },
@@ -133,18 +143,18 @@ export class CommunityService {
         as: 'user',
       },
     },
-    { $unwind: '$user' },
-    {
+{ $unwind: { path: '$user', preserveNullAndEmptyArrays: false } },    {
       $project: {
         id: { $toString: '$user._id' },
-        name: '$user.name',
-        photo: '$user.photo',
+        name: { $ifNull: ['$user.name', 'Unknown User'] },
+        photo: { $ifNull: ['$user.photo', ''] },
         postCount: 1,
       },
     },
   ]);
 
-  return members;
+  // Filter out any members with missing data
+  return members.filter(m => m.name && m.id);
 }
 
   // Get trending tags

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -8,20 +8,27 @@ import Groq from 'groq-sdk';
 const teenlancerPrompt = `
 You are Gengig Assistant for Teenlancers.
 Gengig is a freelancing platform connecting Agents (clients who post jobs)
-and Teenlancers (teen freelancers who complete the work).
+and Teenlancers (teen freelancers aged 13-19 who complete the work).
+
+CRITICAL RULES - you must follow these strictly:
+- Teenlancers CANNOT post gigs. Only Agents can post gigs.
+- Teenlancers can ONLY browse and apply to gigs on the Explore page.
+- Teenlancers CANNOT hire anyone or manage other users.
+- If anyone asks about posting a gig as a teenlancer, always say: "As a Teenlancer on Gengig, you cannot post gigs. Only Agents can post gigs. You can browse available gigs on the Explore page and apply to them."
 
 Your job is to help Teenlancers with:
-1. Finding and applying to gigs
+1. Finding and applying to gigs on the Explore page
 2. Writing cover letters and proposals
-3. Understanding how the platform works
+3. Building their profile with skills, bio, and portfolio
 4. Delivering work and getting paid
-5. Building their profile and skills
+5. Connecting with other teenlancers on the Community Hub
 
-Services on Gengig include: UI/UX Design, Logo Design, Graphic Design, 
-Video Editing, Motion Graphics, Photography, Web Development, 
+Services Teenlancers can OFFER on Gengig:
+UI/UX Design, Logo Design, Graphic Design, Video Editing, 
+Motion Graphics, Photography, Web Development, 
 Content Writing, Social Media, and Animation.
 
-Always be friendly, encouraging and supportive to teen freelancers.
+Always be friendly, encouraging and supportive.
 Keep responses concise and easy to understand.
 If you don't know something specific about Gengig, say so honestly.
 `;
@@ -52,14 +59,14 @@ export class ChatService {
   private groq: Groq;
 
   constructor(
-  @InjectModel(ChatMessage.name)
-  private readonly chatModel: Model<ChatMessageDocument>,
-  private readonly configService: ConfigService,
-) {
-  this.groq = new Groq({
-    apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
-  });
-}
+    @InjectModel(ChatMessage.name)
+    private readonly chatModel: Model<ChatMessageDocument>,
+    private readonly configService: ConfigService,
+  ) {
+    this.groq = new Groq({
+      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
+    });
+  }
 
   async sendMessage(
     userId: string,
@@ -67,56 +74,52 @@ export class ChatService {
     message: string,
     userType: 'teenlancer' | 'agent',
   ) {
-    try {
-      await this.chatModel.create({
-        sessionId,
-        userId,
-        role: 'user',
-        content: message,
-        userType,
-      });
+    await this.chatModel.create({
+      sessionId,
+      userId,
+      role: 'user',
+      content: message,
+      userType,
+    });
 
-      const history = await this.chatModel
-        .find({ sessionId, userId })
-        .sort({ createdAt: 1 })
-        .exec();
+    const history = await this.chatModel
+      .find({ sessionId, userId })
+      .sort({ createdAt: 1 })
+      .exec();
 
-      const systemPrompt =
-        userType === 'teenlancer' ? teenlancerPrompt : agentPrompt;
+    const systemPrompt =
+      userType === 'teenlancer' ? teenlancerPrompt : agentPrompt;
 
-      const chatHistory = history.map((msg) => ({
-        role: msg.role as 'user' | 'assistant',
-        content: msg.content,
-      }));
+    const chatHistory = history.map((msg) => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content,
+    }));
 
-      const completion = await this.groq.chat.completions.create({
-        model: 'llama-3.3-70b-versatile',
-        messages: [{ role: 'system', content: systemPrompt }, ...chatHistory],
-        max_tokens: 500,
-        temperature: 0.7,
-      });
+    const completion = await this.groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...chatHistory,
+      ],
+      max_tokens: 500,
+      temperature: 0.7,
+    });
 
-      const aiReply = completion.choices[0].message.content ?? '';
+    const aiReply = completion.choices[0].message.content ?? '';
 
-      await this.chatModel.create({
-        sessionId,
-        userId,
-        role: 'assistant',
-        content: aiReply,
-        userType,
-      });
+    await this.chatModel.create({
+      sessionId,
+      userId,
+      role: 'assistant',
+      content: aiReply,
+      userType,
+    });
 
-      return {
-        reply: aiReply,
-        sessionId,
-        userType,
-      };
-    } catch (error) {
-      console.error('Chatbot error:', error);
-      throw new InternalServerErrorException(
-        'Failed to generate chatbot response',
-      );
-    }
+    return {
+      reply: aiReply,
+      sessionId,
+      userType,
+    };
   }
 
   async getHistory(userId: string, sessionId: string) {
