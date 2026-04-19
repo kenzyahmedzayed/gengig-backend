@@ -18,7 +18,7 @@ import { IsString, IsNotEmpty } from 'class-validator';
 class SendMessageDto {
   @IsString()
   @IsNotEmpty()
-  content: string;
+  content!: string;
 }
 
 @Controller('chat')
@@ -76,5 +76,10 @@ async createConversation(
     String(user._id),
     body.userId,
   );
+}
+// GET /chat/unread-counts
+@Get('unread-counts')
+getUnreadCounts(@CurrentUser() user: UserDocument) {
+  return this.messagingService.getUnreadCounts(String(user._id));
 }
 }

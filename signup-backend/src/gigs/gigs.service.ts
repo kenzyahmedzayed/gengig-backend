@@ -92,9 +92,11 @@ export class GigsService {
   }
 
   // Get gigs by agent
-  async findByAgent(agentId: string): Promise<GigDocument[]> {
-    return this.gigModel.find({ postedBy: agentId }).exec();
-  }
+  async findByAgent(agentId: string, status?: string): Promise<GigDocument[]> {
+  const filter: any = { postedBy: agentId };
+  if (status) filter.status = status;
+  return this.gigModel.find(filter).exec();
+}
 
   // Update a gig
   async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
