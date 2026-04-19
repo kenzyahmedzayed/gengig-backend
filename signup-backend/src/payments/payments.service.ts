@@ -42,4 +42,21 @@ export class PaymentsService {
       .sort({ createdAt: -1 })
       .exec();
   }
+  async withdraw(userId: string, amount: number): Promise<any> {
+  // Create a withdrawal transaction
+  const transaction = new this.transactionModel({
+    userId,
+    amount,
+    type: 'withdrawal',
+    description: 'Withdrawal request',
+    status: 'pending',
+  });
+  await transaction.save();
+
+  return {
+    message: 'Withdrawal request submitted successfully',
+    amount,
+    status: 'pending',
+  };
+}
 }

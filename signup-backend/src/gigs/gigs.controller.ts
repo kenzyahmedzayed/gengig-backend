@@ -56,11 +56,14 @@ export class GigsController {
   }
 
   // GET /agent/gigs
-  @Get('agent/gigs')
-  @UseGuards(JwtAuthGuard)
-  findAgentGigs(@CurrentUser() user: UserDocument) {
-    return this.gigsService.findByAgent(String(user._id));
-  }
+  @Get('/agent/gigs')
+@UseGuards(JwtAuthGuard)
+findAgentGigs(
+  @CurrentUser() user: UserDocument,
+  @Query('status') status: string,
+) {
+  return this.gigsService.findByAgent(String(user._id), status);
+}
 
   // GET /teenlancer/gigs?status=completed
   @Get('teenlancer/gigs')

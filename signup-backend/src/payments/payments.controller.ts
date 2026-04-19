@@ -51,4 +51,13 @@ export class PaymentsController {
   getTransactions(@CurrentUser() user: UserDocument) {
     return this.paymentsService.getTransactions(String(user._id));
   }
+  // POST /payments/withdraw
+@Post('withdraw')
+@HttpCode(HttpStatus.OK)
+withdraw(
+  @CurrentUser() user: UserDocument,
+  @Body() body: any,
+) {
+  return this.paymentsService.withdraw(String(user._id), body.amount);
+}
 }

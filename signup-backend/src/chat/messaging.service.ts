@@ -124,4 +124,30 @@ export class MessagingService {
     },
   };
 }
+async getUnreadCounts(userId: string): Promise<any> {
+  const unreadMessages = await this.messageModel.aggregate([
+    {
+      $match: {
+        receiver: userId,
+        isRead: false,
+      },
+    },
+    {
+      $group: {
+        _id: '$sender',
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const totalUnread = unreadMessages.reduce((sum, item) => sum + item.count, 0);
+
+  return {
+    total: totalUnread,
+    byContact: unreadMessages.map(item => ({
+      userId: item._id,
+      count: item.count,
+    })),
+  };
+}
 }
