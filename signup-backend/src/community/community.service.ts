@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CommunityPost, CommunityPostDocument } from './community.schema';
@@ -28,7 +28,6 @@ export class CommunityService {
     };
   }
 
-  // Get all posts
   async findAll(): Promise<any[]> {
   const posts = await this.postModel
     .find()
@@ -50,7 +49,6 @@ export class CommunityService {
     }));
 }
 
-  // Create a new post — only teenlancers
   async create(
     userId: string,
     userRole: string,
@@ -75,25 +73,26 @@ export class CommunityService {
     return this.formatPost(populatedPost);
   }
 
-  // Like or unlike a post
   async likePost(postId: string, userId: string): Promise<CommunityPostDocument> {
-    const post = await this.postModel.findById(postId);
-    if (!post) throw new NotFoundException('Post not found');
-
-    const alreadyLiked = post.likes.some(
-      (id) => id.toString() === userId,
-    );
-
-    if (alreadyLiked) {
-      // Unlike
-      post.likes = post.likes.filter((id) => id.toString() !== userId);
-    } else {
-      // Like
-      post.likes.push(userId as any);
-    }
-
-    return post.save();
+  if (!postId || postId === 'undefined') {
+    throw new BadRequestException('Invalid post ID');
   }
+
+  const post = await this.postModel.findById(postId);
+  if (!post) throw new NotFoundException('Post not found');
+
+  const alreadyLiked = post.likes.some(
+    (id) => id.toString() === userId,
+  );
+
+  if (alreadyLiked) {
+    post.likes = post.likes.filter((id) => id.toString() !== userId);
+  } else {
+    post.likes.push(userId as any);
+  }
+
+  return post.save();
+}
 
   // Add a comment
   async addComment(

@@ -1,4 +1,4 @@
-import { Controller, Post, Get,Put, Body, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get,Put, Body, Query, HttpCode, HttpStatus, UseGuards, Res } from '@nestjs/common';
 import { IsEmail, IsString } from "class-validator";
 import { AuthService } from "./auth.service";
 import { RegisterDto } from "./dto/register.dto";
@@ -7,41 +7,42 @@ import { CurrentUser } from "./decorators/current-user.decorator";
 import type { UserDocument } from "../users/users.schema";
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forget-password.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 class ResendDto {
   @IsEmail()
-  email: string;
+  email!: string;
 }
 
 class VerifyEmailDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  code: string;
+  code!: string;
 }
 
 class VerifyResetCodeDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  code: string;
+  code!: string;
 }
 
 class ResetPasswordDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  newPassword: string;
+  newPassword!: string;
 }
 class ChangePasswordDto {
   @IsString()
-  currentPassword: string;
+  currentPassword!: string;
 
   @IsString()
-  newPassword: string;
+  newPassword!: string;
 }
 
 @Controller('auth')
@@ -95,7 +96,7 @@ verifyResetCode(@Body() dto: VerifyResetCodeDto) {
 resetPassword(@Body() dto: ResetPasswordDto) {
   return this.authService.resetPassword(dto.email, dto.newPassword);
 }
-// PUT /auth/change-password
+
 @Put('change-password')
 @HttpCode(HttpStatus.OK)
 @UseGuards(JwtAuthGuard)
@@ -114,5 +115,21 @@ changePassword(
 @UseGuards(JwtAuthGuard)
 async logout() {
   return this.authService.logout();
+}
+
+@Get('google')
+@UseGuards(AuthGuard('google'))
+googleLogin() {
+}
+
+@Get('google/callback')
+@UseGuards(AuthGuard('google'))
+async googleCallback(
+  @CurrentUser() user: UserDocument,
+  @Res() res: any,
+) {
+  const token = await this.authService.generateAccessTokenPublic(user);
+  const frontendUrl = `http://localhost:5173/auth/google/success?token=${token}&role=${user.role}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
+  return res.redirect(frontendUrl);
 }
 }

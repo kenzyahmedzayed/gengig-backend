@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { SaveCardDto } from './dto/save-card.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,13 +10,11 @@ import type { UserDocument } from '../users/users.schema';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  // GET /payments/cards
   @Get('cards')
   getCards(@CurrentUser() user: UserDocument) {
     return this.paymentsService.getCards(String(user._id));
   }
 
-  // POST /payments/save-card
   @Post('save-card')
   @HttpCode(HttpStatus.CREATED)
   saveCard(
@@ -36,7 +24,6 @@ export class PaymentsController {
     return this.paymentsService.saveCard(String(user._id), dto);
   }
 
-  // DELETE /payments/cards/:id
   @Delete('cards/:id')
   @HttpCode(HttpStatus.OK)
   deleteCard(
@@ -46,12 +33,10 @@ export class PaymentsController {
     return this.paymentsService.deleteCard(id, String(user._id));
   }
 
-  // GET /payments/transactions
   @Get('transactions')
   getTransactions(@CurrentUser() user: UserDocument) {
     return this.paymentsService.getTransactions(String(user._id));
   }
-  // POST /payments/withdraw
 @Post('withdraw')
 @HttpCode(HttpStatus.OK)
 withdraw(

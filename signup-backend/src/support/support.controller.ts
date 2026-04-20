@@ -4,23 +4,23 @@ import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 class SupportTicketDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
   @IsNotEmpty()
-  subject: string;
+  subject!: string;
 
   @IsString()
   @IsNotEmpty()
-  message: string;
+  message!: string;
 }
 
 class NewsletterDto {
   @IsEmail()
-  email: string;
+  email!: string;
 }
 
 @Controller()

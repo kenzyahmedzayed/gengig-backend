@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Body,
-  Param,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -26,13 +16,11 @@ class SendMessageDto {
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
-  // GET /chat/contacts
   @Get('contacts')
   getContacts(@CurrentUser() user: UserDocument) {
     return this.messagingService.getContacts(String(user._id));
   }
 
-  // GET /chat/messages/:userId
   @Get('messages/:userId')
   getMessages(
     @CurrentUser() user: UserDocument,
@@ -41,7 +29,6 @@ export class MessagingController {
     return this.messagingService.getMessages(String(user._id), otherUserId);
   }
 
-  // POST /chat/messages/:userId
   @Post('messages/:userId')
   @HttpCode(HttpStatus.CREATED)
   sendMessage(
@@ -56,7 +43,6 @@ export class MessagingController {
     );
   }
 
-  // PUT /chat/messages/:userId/read
   @Put('messages/:userId/read')
   @HttpCode(HttpStatus.OK)
   markAsRead(
@@ -65,7 +51,7 @@ export class MessagingController {
   ) {
     return this.messagingService.markAsRead(String(user._id), otherUserId);
   }
-  // POST /chat/conversations
+  
 @Post('conversations')
 @HttpCode(HttpStatus.OK)
 async createConversation(
@@ -77,7 +63,7 @@ async createConversation(
     body.userId,
   );
 }
-// GET /chat/unread-counts
+
 @Get('unread-counts')
 getUnreadCounts(@CurrentUser() user: UserDocument) {
   return this.messagingService.getUnreadCounts(String(user._id));

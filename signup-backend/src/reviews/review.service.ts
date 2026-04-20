@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-  ConflictException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Review, ReviewDocument } from './review.schema';
@@ -16,7 +11,6 @@ export class ReviewsService {
     private readonly reviewModel: Model<ReviewDocument>,
   ) {}
 
-  // Agent creates a review for a teenlancer
   async create(
     agentId: string,
     agentRole: string,
@@ -26,7 +20,6 @@ export class ReviewsService {
       throw new ForbiddenException('Only agents can write reviews');
     }
 
-    // Check if agent already reviewed this teenlancer for this gig
     const existing = await this.reviewModel.findOne({
       reviewer: agentId,
       teenlancer: dto.teenlancerId,
@@ -48,7 +41,6 @@ export class ReviewsService {
     return review.save();
   }
 
-  // Get reviews for a teenlancer
   async getTeenlancerReviews(teenlancerId: string): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find({ teenlancer: teenlancerId })
@@ -58,7 +50,6 @@ export class ReviewsService {
       .exec();
   }
 
-  // Get reviews written by an agent
   async getAgentReviews(agentId: string): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find({ reviewer: agentId })
@@ -68,7 +59,6 @@ export class ReviewsService {
       .exec();
   }
 
-  // Get average rating for a teenlancer
   async getTeenlancerRating(teenlancerId: string): Promise<any> {
     const reviews = await this.reviewModel
       .find({ teenlancer: teenlancerId })
@@ -87,7 +77,6 @@ export class ReviewsService {
     };
   }
 
-  // Get agent stats
   async getAgentStats(agentId: string): Promise<any> {
     const gigsPosted = await this.reviewModel.countDocuments({
       reviewer: agentId,

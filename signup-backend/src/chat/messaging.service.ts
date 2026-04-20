@@ -10,7 +10,6 @@ export class MessagingService {
     private readonly messageModel: Model<MessageDocument>,
   ) {}
 
-  // Get contacts list
   async getContacts(userId: string): Promise<any[]> {
   const messages = await this.messageModel
     .find({
@@ -21,7 +20,6 @@ export class MessagingService {
     .sort({ createdAt: -1 })
     .exec();
 
-  // Get unique contacts
   const contactsMap = new Map();
   for (const msg of messages) {
     const other = String((msg.sender as any)._id) === userId
@@ -30,7 +28,6 @@ export class MessagingService {
     const otherId = String((other as any)._id);
     
     if (!contactsMap.has(otherId)) {
-      // Count unread messages
       const unreadCount = await this.messageModel.countDocuments({
         sender: otherId,
         receiver: userId,
@@ -52,7 +49,6 @@ export class MessagingService {
   return Array.from(contactsMap.values());
 }
 
-  // Get messages between two users
   async getMessages(userId: string, otherUserId: string): Promise<MessageDocument[]> {
     return this.messageModel
       .find({
@@ -67,7 +63,6 @@ export class MessagingService {
       .exec();
   }
 
-  // Send a message
   async sendMessage(
     senderId: string,
     receiverId: string,
@@ -81,7 +76,6 @@ export class MessagingService {
     return message.save();
   }
 
-  // Mark messages as read
   async markAsRead(userId: string, otherUserId: string): Promise<any> {
     await this.messageModel.updateMany(
       { sender: otherUserId, receiver: userId, isRead: false },
@@ -90,7 +84,6 @@ export class MessagingService {
     return { message: 'Messages marked as read' };
   }
   async createConversation(userId: string, otherUserId: string): Promise<any> {
-  // Check if conversation already exists
   const existing = await this.messageModel.findOne({
     $or: [
       { sender: userId, receiver: otherUserId },
@@ -116,7 +109,6 @@ export class MessagingService {
     };
   }
 
-  // Return new conversation info without creating a message
   return {
     conversationId: `conv_${userId}_${otherUserId}`,
     contact: {

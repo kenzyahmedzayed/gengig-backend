@@ -14,16 +14,16 @@ export enum GigStatus {
 @Schema({ timestamps: true })
 export class Gig {
   @Prop({ required: true, trim: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true })
-  description: string;
+  description!: string;
 
   @Prop({ required: true })
-  category: string;
+  category! : string;
 
   @Prop({ required: true })
-  budget: string;
+  budget!: string;
 
   @Prop()
   duration?: string;
@@ -32,19 +32,19 @@ export class Gig {
   deadline?: string;
 
   @Prop({ type: [String], default: [] })
-  skills: string[];
+  skills!: string[];
 
   @Prop({ type: [String], default: [] })
-  requirements: string[];
+  requirements!: string[];
 
   @Prop({ enum: GigStatus, default: GigStatus.OPEN })
-  status: string;
+  status!: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  postedBy: Types.ObjectId;
+  postedBy!: Types.ObjectId;
 
   @Prop({ default: false })
-  isFeatured: boolean;
+  isFeatured!: boolean;
 }
 
 export const GigSchema = SchemaFactory.createForClass(Gig);

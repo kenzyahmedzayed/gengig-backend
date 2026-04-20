@@ -10,7 +10,6 @@ export class NotificationsService {
     private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
-  // Get all notifications for a user
   async findAll(userId: string): Promise<NotificationDocument[]> {
     return this.notificationModel
       .find({ userId })
@@ -18,7 +17,6 @@ export class NotificationsService {
       .exec();
   }
 
-  // Get unread count
   async getUnreadCount(userId: string): Promise<any> {
     const count = await this.notificationModel.countDocuments({
       userId,
@@ -27,7 +25,6 @@ export class NotificationsService {
     return { count };
   }
 
-  // Mark single notification as read
   async markAsRead(id: string, userId: string): Promise<NotificationDocument> {
     const notification = await this.notificationModel.findOne({
       _id: id,
@@ -38,7 +35,6 @@ export class NotificationsService {
     return notification.save();
   }
 
-  // Mark all as read
   async markAllAsRead(userId: string): Promise<any> {
     await this.notificationModel.updateMany(
       { userId, isRead: false },
@@ -47,7 +43,6 @@ export class NotificationsService {
     return { message: 'All notifications marked as read' };
   }
 
-  // Delete a notification
   async delete(id: string, userId: string): Promise<any> {
     const notification = await this.notificationModel.findOne({
       _id: id,
@@ -58,7 +53,6 @@ export class NotificationsService {
     return { message: 'Notification deleted successfully' };
   }
 
-  // Create a notification (used internally)
   async create(
     userId: string,
     title: string,

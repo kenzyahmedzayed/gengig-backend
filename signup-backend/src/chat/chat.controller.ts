@@ -1,15 +1,4 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-  BadRequestException,
-} from '@nestjs/common';
+import {Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, BadRequestException,} from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -19,14 +8,14 @@ import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
 class SendMessageDto {
   @IsString()
   @IsNotEmpty()
-  message: string;
+  message!: string;
 
   @IsString()
   @IsNotEmpty()
-  sessionId: string;
+  sessionId!: string;
 
   @IsEnum(['teenlancer', 'agent'])
-  userType: 'teenlancer' | 'agent';
+  userType!: 'teenlancer' | 'agent';
 }
 
 @Controller('chat')
@@ -58,7 +47,6 @@ export class ChatController {
     } as SendMessageDto;
   }
 
-  // POST /chat/send
   @Post('send')
   @HttpCode(HttpStatus.OK)
   sendMessage(
@@ -75,13 +63,11 @@ export class ChatController {
     );
   }
 
-  // GET /chat/sessions
   @Get('sessions')
   getSessions(@CurrentUser() user: UserDocument) {
     return this.chatService.getSessions(String(user._id));
   }
 
-  // GET /chat/history/:sessionId
   @Get('history/:sessionId')
   getHistory(
     @CurrentUser() user: UserDocument,
@@ -90,7 +76,6 @@ export class ChatController {
     return this.chatService.getHistory(String(user._id), sessionId);
   }
 
-  // DELETE /chat/session/:sessionId
   @Delete('session/:sessionId')
   @HttpCode(HttpStatus.OK)
   deleteSession(

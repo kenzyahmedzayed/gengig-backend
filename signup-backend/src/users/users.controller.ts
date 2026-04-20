@@ -36,13 +36,11 @@ export class UsersController {
     };
   }
 
-  // GET /users/profile
   @Get('profile')
   getProfile(@CurrentUser() user: UserDocument) {
     return this.usersService.findById(String(user._id));
   }
 
-  // POST /users/onboarding/teenlancer
   @Post('onboarding/teenlancer')
   @HttpCode(HttpStatus.OK)
   teenlancerOnboarding(
@@ -55,7 +53,6 @@ export class UsersController {
     });
   }
 
-  // POST /users/onboarding/agent
   @Post('onboarding/agent')
   @HttpCode(HttpStatus.OK)
   agentOnboarding(
@@ -68,7 +65,6 @@ export class UsersController {
     });
   }
 
-  // PUT /users/profile
 @Put('profile')
 @HttpCode(HttpStatus.OK)
 updateProfile(
@@ -77,7 +73,6 @@ updateProfile(
 ) {
   const normalized = this.normalizeUserUpdate(dto);
   
-  // Only save photo if it's a real URL, not base64
   if (normalized.photo && !normalized.photo.startsWith('http')) {
     delete normalized.photo;
   }
@@ -85,14 +80,12 @@ updateProfile(
   return this.usersService.updateById(String(user._id), normalized);
 }
 
-  // DELETE /users/account
   @Delete('account')
   @HttpCode(HttpStatus.OK)
   async deleteAccount(@CurrentUser() user: UserDocument) {
     await this.usersService.deleteById(String(user._id));
     return { message: 'Account deleted successfully' };
   }
-  // PUT /users/settings
 @Put('settings')
 @HttpCode(HttpStatus.OK)
 updateSettings(
@@ -104,13 +97,11 @@ updateSettings(
     this.normalizeUserUpdate(dto),
   );
 }
-// GET /users/settings
 @Get('settings')
 getSettings(@CurrentUser() user: UserDocument) {
   return this.usersService.findById(String(user._id));
 }
 
-// PUT /users/notifications
 @Put('notifications')
 @HttpCode(HttpStatus.OK)
 updateNotifications(
@@ -121,7 +112,6 @@ updateNotifications(
     notificationPreferences: dto,
   });
 }
-  // POST /users/upload-photo
 @Post('upload-photo')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(FileInterceptor('photo'))
@@ -133,7 +123,6 @@ async uploadPhoto(
     throw new BadRequestException('No file uploaded');
   }
 
-  // Upload to Cloudinary
   const result = await new Promise((resolve, reject) => {
     cloudinary.uploader.upload_stream(
       {
@@ -149,7 +138,6 @@ async uploadPhoto(
 
   const photoUrl = (result as any).secure_url;
 
-  // Save photo URL to user profile
   await this.usersService.updateById(String(user._id), {
     photo: photoUrl,
   });
@@ -160,43 +148,39 @@ async uploadPhoto(
   url: photoUrl,
 };
 }
-// GET /teenlancer/stats
 @Get('teenlancer/stats')
 @UseGuards(JwtAuthGuard)
 getTeenlancerStats(@CurrentUser() user: UserDocument) {
   return this.usersService.getTeenlancerStats(String(user._id));
 }
 
-// GET /teenlancer/activity
 @Get('teenlancer/activity')
 @UseGuards(JwtAuthGuard)
 getTeenlancerActivity(@CurrentUser() user: UserDocument) {
   return this.usersService.getTeenlancerActivity(String(user._id));
 }
-// GET /teenlancer/dashboard
 @Get('teenlancer/dashboard')
 @UseGuards(JwtAuthGuard)
 getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
   return this.usersService.getTeenlancerDashboard(String(user._id));
 }
 
-// GET /agent/dashboard
 @Get('agent/dashboard')
 @UseGuards(JwtAuthGuard)
 getAgentDashboard(@CurrentUser() user: UserDocument) {
   return this.usersService.getAgentDashboard(String(user._id));
 }
-// GET /platform/stats
+
 @Get('platform/stats')
 getPlatformStats() {
   return this.usersService.getPlatformStats();
 }
-// GET /users/teenlancers
+
 @Get('teenlancers')
 getTeenlancers(@Query() query: any) {
   return this.usersService.getTeenlancers(query);
 }
-// POST /uploads/image
+
 @Post('/uploads/image')
 @UseInterceptors(FileInterceptor('image'))
 async uploadImage(

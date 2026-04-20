@@ -12,16 +12,16 @@ export enum ApplicationStatus {
 @Schema({ timestamps: true })
 export class Application {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  appliedBy: Types.ObjectId;
+  appliedBy!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Gig', required: true })
-  gig: Types.ObjectId;
+  gig!: Types.ObjectId;
 
   @Prop({ required: true })
-  coverLetter: string;
+  coverLetter!: string;
 
   @Prop({ enum: ApplicationStatus, default: ApplicationStatus.PENDING })
-  status: ApplicationStatus;
+  status!: ApplicationStatus;
 
   @Prop()
   portfolioLink?: string;
