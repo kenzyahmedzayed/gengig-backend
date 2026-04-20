@@ -11,13 +11,12 @@ export class ApplicationsService {
     private readonly applicationModel: Model<ApplicationDocument>,
   ) {}
 
-  // Teenlancer applies to a gig
   async apply(
     teenlancerId: string,
     gigId: string,
     dto: CreateApplicationDto,
   ): Promise<ApplicationDocument> {
-    // Check if already applied
+    
     const existing = await this.applicationModel.findOne({
       appliedBy: teenlancerId,
       gig: gigId,
@@ -36,7 +35,6 @@ export class ApplicationsService {
     return application.save();
   }
 
-  // Agent gets all applications for their gigs
   async findByAgent(agentId: string): Promise<ApplicationDocument[]> {
     return this.applicationModel
       .find()
@@ -49,7 +47,6 @@ export class ApplicationsService {
       .then(apps => apps.filter(app => app.gig !== null));
   }
 
-  // Get application counts by status for an agent
   async getCounts(agentId: string): Promise<any> {
     const applications = await this.findByAgent(agentId);
 
@@ -61,7 +58,6 @@ export class ApplicationsService {
     };
   }
 
-  // Get teenlancer's applications
   async findByTeenlancer(teenlancerId: string): Promise<ApplicationDocument[]> {
     return this.applicationModel
       .find({ appliedBy: teenlancerId })
@@ -69,17 +65,14 @@ export class ApplicationsService {
       .exec();
   }
 
-  // Accept an application
   async accept(id: string, agentId: string): Promise<ApplicationDocument> {
     return this.updateStatus(id, agentId, ApplicationStatus.ACCEPTED);
   }
 
-  // Reject an application
   async reject(id: string, agentId: string): Promise<ApplicationDocument> {
     return this.updateStatus(id, agentId, ApplicationStatus.REJECTED);
   }
 
-  // Reset application status back to pending
   async reset(id: string, agentId: string): Promise<ApplicationDocument> {
     return this.updateStatus(id, agentId, ApplicationStatus.PENDING);
   }

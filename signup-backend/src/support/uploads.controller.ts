@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Post,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, HttpCode, HttpStatus, } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { cloudinary } from '../users/cloudinary.config';
 

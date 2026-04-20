@@ -10,7 +10,6 @@ export class GigsService {
     @InjectModel(Gig.name) private readonly gigModel: Model<GigDocument>,
   ) {}
 
-  // Create a new gig
   async create(agentId: string, dto: CreateGigDto): Promise<any> {
   const gig = new this.gigModel({
     ...dto,
@@ -50,7 +49,6 @@ export class GigsService {
   };
 }
 
-  // Get all gigs with optional filters
   async findAll(query: any = {}): Promise<GigDocument[]> {
     const filter: any = {};
 
@@ -72,7 +70,6 @@ export class GigsService {
     return this.gigModel.find(filter).populate('postedBy', 'name email photo').exec();
   }
 
-  // Get featured gigs for homepage
   async findFeatured(): Promise<GigDocument[]> {
     return this.gigModel
       .find({ isFeatured: true, status: 'open' })
@@ -80,7 +77,6 @@ export class GigsService {
       .exec();
   }
 
-  // Get single gig by ID
   async findById(id: string): Promise<GigDocument> {
     const gig = await this.gigModel
       .findById(id)
@@ -91,14 +87,12 @@ export class GigsService {
     return gig;
   }
 
-  // Get gigs by agent
   async findByAgent(agentId: string, status?: string): Promise<GigDocument[]> {
   const filter: any = { postedBy: agentId };
   if (status) filter.status = status;
   return this.gigModel.find(filter).exec();
 }
 
-  // Update a gig
   async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
     const gig = await this.gigModel.findById(id);
     if (!gig) throw new NotFoundException('Gig not found');
@@ -108,7 +102,6 @@ export class GigsService {
     return this.gigModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
   }
 
-  // Delete a gig
   async delete(id: string, agentId: string): Promise<void> {
     const gig = await this.gigModel.findById(id);
     if (!gig) throw new NotFoundException('Gig not found');

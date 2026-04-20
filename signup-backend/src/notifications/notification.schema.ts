@@ -14,19 +14,19 @@ export enum NotificationType {
 @Schema({ timestamps: true })
 export class Notification {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true })
-  message: string;
+  message!: string;
 
   @Prop({ enum: NotificationType, default: NotificationType.GENERAL })
-  type: NotificationType;
+  type!: NotificationType;
 
   @Prop({ default: false })
-  isRead: boolean;
+  isRead!: boolean;
 
   @Prop()
   link?: string;

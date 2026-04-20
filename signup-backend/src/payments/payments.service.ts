@@ -13,12 +13,10 @@ export class PaymentsService {
     private readonly transactionModel: Model<TransactionDocument>,
   ) {}
 
-  // Get saved cards
   async getCards(userId: string): Promise<PaymentCardDocument[]> {
     return this.cardModel.find({ userId }).exec();
   }
 
-  // Save a new card
   async saveCard(userId: string, dto: SaveCardDto): Promise<PaymentCardDocument> {
     const card = new this.cardModel({
       userId,
@@ -27,7 +25,6 @@ export class PaymentsService {
     return card.save();
   }
 
-  // Delete a card
   async deleteCard(cardId: string, userId: string): Promise<any> {
     const card = await this.cardModel.findOne({ _id: cardId, userId });
     if (!card) throw new NotFoundException('Card not found');
@@ -35,7 +32,6 @@ export class PaymentsService {
     return { message: 'Card removed successfully' };
   }
 
-  // Get transaction history
   async getTransactions(userId: string): Promise<TransactionDocument[]> {
     return this.transactionModel
       .find({ userId })
@@ -43,7 +39,6 @@ export class PaymentsService {
       .exec();
   }
   async withdraw(userId: string, amount: number): Promise<any> {
-  // Create a withdrawal transaction
   const transaction = new this.transactionModel({
     userId,
     amount,

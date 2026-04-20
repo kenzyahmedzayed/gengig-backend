@@ -7,25 +7,25 @@ export type TransactionDocument = Transaction & Document;
 @Schema({ timestamps: true })
 export class PaymentCard {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true })
-  cardHolderName: string;
+  cardHolderName!: string;
 
   @Prop({ required: true })
-  lastFourDigits: string;
+  lastFourDigits!: string;
 
   @Prop({ required: true })
-  expiryMonth: string;
+  expiryMonth!: string;
 
   @Prop({ required: true })
-  expiryYear: string;
+  expiryYear!: string;
 
   @Prop({ required: true })
-  cardType: string;
+  cardType!: string;
 
   @Prop({ default: false })
-  isDefault: boolean;
+  isDefault!: boolean;
 }
 
 export const PaymentCardSchema = SchemaFactory.createForClass(PaymentCard);
@@ -33,19 +33,19 @@ export const PaymentCardSchema = SchemaFactory.createForClass(PaymentCard);
 @Schema({ timestamps: true })
 export class Transaction {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({ required: true })
-  amount: number;
+  amount!: number;
 
   @Prop({ required: true })
-  type: string;
+  type!: string;
 
   @Prop({ required: true })
-  description: string;
+  description!: string;
 
   @Prop({ default: 'completed' })
-  status: string;
+  status!: string;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

@@ -10,7 +10,6 @@ import type { UserDocument } from '../users/users.schema';
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
-  // POST /gigs/:id/apply
   @Post('gigs/:id/apply')
   @HttpCode(HttpStatus.CREATED)
   apply(
@@ -21,25 +20,21 @@ export class ApplicationsController {
     return this.applicationsService.apply(String(user._id), gigId, dto);
   }
 
-  // GET /agent/applications
   @Get('agent/applications')
   findByAgent(@CurrentUser() user: UserDocument) {
     return this.applicationsService.findByAgent(String(user._id));
   }
 
-  // GET /agent/applications/counts
   @Get('agent/applications/counts')
   getCounts(@CurrentUser() user: UserDocument) {
     return this.applicationsService.getCounts(String(user._id));
   }
 
-  // GET /teenlancer/gigs
   @Get('teenlancer/gigs')
   findByTeenlancer(@CurrentUser() user: UserDocument) {
     return this.applicationsService.findByTeenlancer(String(user._id));
   }
 
-  // PUT /applications/:id/accept
   @Put('applications/:id/accept')
   @HttpCode(HttpStatus.OK)
   accept(
@@ -49,7 +44,6 @@ export class ApplicationsController {
     return this.applicationsService.accept(id, String(user._id));
   }
 
-  // PUT /applications/:id/reject
   @Put('applications/:id/reject')
   @HttpCode(HttpStatus.OK)
   reject(
@@ -59,7 +53,6 @@ export class ApplicationsController {
     return this.applicationsService.reject(id, String(user._id));
   }
 
-  // PUT /applications/:id/reset
   @Put('applications/:id/reset')
   @HttpCode(HttpStatus.OK)
   reset(
@@ -68,17 +61,16 @@ export class ApplicationsController {
   ) {
     return this.applicationsService.reset(id, String(user._id));
   }
- // GET /teenlancer/dashboard
-@Get('teenlancer/dashboard')
-@UseGuards(JwtAuthGuard)
-getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
-  return this.applicationsService.getTeenlancerDashboard(String(user._id));
-}
 
-// GET /agent/dashboard
-@Get('agent/dashboard')
-@UseGuards(JwtAuthGuard)
-getAgentDashboard(@CurrentUser() user: UserDocument) {
+  @Get('teenlancer/dashboard')
+  @UseGuards(JwtAuthGuard)
+  getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
+  return this.applicationsService.getTeenlancerDashboard(String(user._id));
+  }
+
+  @Get('agent/dashboard')
+  @UseGuards(JwtAuthGuard)
+  getAgentDashboard(@CurrentUser() user: UserDocument) {
   return this.applicationsService.getAgentDashboard(String(user._id));
-}
+  }
 }

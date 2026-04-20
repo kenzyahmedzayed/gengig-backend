@@ -38,7 +38,6 @@ export class AuthService {
   verificationCodeExpires: verificationExpires,
 });
 
-    //const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     
 
@@ -249,4 +248,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   return { message: 'Logged out successfully' };
 }
 
+async generateAccessTokenPublic(user: UserDocument): Promise<string> {
+  return this.generateAccessToken(user);
+}
 }

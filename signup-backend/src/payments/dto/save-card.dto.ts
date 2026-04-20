@@ -3,23 +3,23 @@ import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
 export class SaveCardDto {
   @IsString()
   @IsNotEmpty()
-  cardHolderName: string;
+  cardHolderName!: string;
 
   @IsString()
   @IsNotEmpty()
-  lastFourDigits: string;
+  lastFourDigits!: string;
 
   @IsString()
   @IsNotEmpty()
-  expiryMonth: string;
+  expiryMonth!: string;
 
   @IsString()
   @IsNotEmpty()
-  expiryYear: string;
+  expiryYear!: string;
 
   @IsString()
   @IsNotEmpty()
-  cardType: string;
+  cardType!: string;
 
   @IsOptional()
   @IsBoolean()

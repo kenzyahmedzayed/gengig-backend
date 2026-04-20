@@ -12,19 +12,19 @@ export enum UserRole {
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true })
-  name: string;
+  name!: string;
 
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true, select: false })
-  password: string;
+  password!: string;
 
   @Prop({ default: false })
-  isEmailVerified: boolean;
+  isEmailVerified!: boolean;
 
   @Prop({ enum: UserRole, default: UserRole.TEENLANCER })
-role: UserRole;
+role!: UserRole;
 
   @Prop({ select: false })
   verificationCode?: string;

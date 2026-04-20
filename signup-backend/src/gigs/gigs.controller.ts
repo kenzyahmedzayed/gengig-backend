@@ -37,25 +37,22 @@ export class GigsController {
     };
   }
 
-  // GET /gigs
+
   @Get()
   findAll(@Query() query: any) {
     return this.gigsService.findAll(query);
   }
 
-  // GET /gigs/featured
   @Get('featured')
   findFeatured() {
     return this.gigsService.findFeatured();
   }
 
-  // GET /gigs/search?q=website
   @Get('search')
   search(@Query() query: any) {
     return this.gigsService.findAll({ search: query.q, ...query });
   }
 
-  // GET /agent/gigs
   @Get('/agent/gigs')
 @UseGuards(JwtAuthGuard)
 findAgentGigs(
@@ -65,7 +62,6 @@ findAgentGigs(
   return this.gigsService.findByAgent(String(user._id), status);
 }
 
-  // GET /teenlancer/gigs?status=completed
   @Get('teenlancer/gigs')
   @UseGuards(JwtAuthGuard)
   findTeenlancerGigs(
@@ -75,32 +71,27 @@ findAgentGigs(
     return this.gigsService.findByAgent(String(user._id));
   }
 
-  // GET /gigs/recommended
   @Get('recommended')
   @UseGuards(JwtAuthGuard)
   getRecommended(@CurrentUser() user: UserDocument) {
     return this.gigsService.getRecommended(String(user._id));
   }
 
-  // GET /gigs/related/:id
   @Get('related/:id')
   getRelated(@Param('id') id: string) {
     return this.gigsService.getRelated(id);
   }
 
-  // GET /gigs/category/:category
   @Get('category/:category')
   getByCategory(@Param('category') category: string) {
     return this.gigsService.findAll({ category });
   }
 
-  // GET /gigs/:id
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.gigsService.findById(id);
   }
 
-  // POST /gigs
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -114,7 +105,6 @@ findAgentGigs(
     );
   }
 
-  // PUT /gigs/:id
   @Put(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -130,7 +120,6 @@ findAgentGigs(
     );
   }
 
-  // DELETE /gigs/:id
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -142,7 +131,6 @@ findAgentGigs(
     return { message: 'Gig deleted successfully' };
   }
 
-// POST /gigs/:id/save
 @Post(':id/save')
 @UseGuards(JwtAuthGuard)
 @HttpCode(HttpStatus.OK)

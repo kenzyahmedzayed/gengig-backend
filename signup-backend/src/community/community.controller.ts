@@ -1,13 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
 import { CommunityService } from './community.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -27,25 +18,21 @@ export class CommunityController {
     };
   }
 
-  // GET /community/posts — public
   @Get('posts')
   findAll() {
     return this.communityService.findAll();
   }
 
-  // GET /community/active-members — public
   @Get('active-members')
   getActiveMembers() {
     return this.communityService.getActiveMembers();
   }
 
-  // GET /community/trending-tags — public
   @Get('trending-tags')
   getTrendingTags() {
     return this.communityService.getTrendingTags();
   }
 
-  // POST /community/posts — teenlancers only
   @Post('posts')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -60,7 +47,6 @@ export class CommunityController {
     );
   }
 
-  // POST /community/posts/:id/like — teenlancers only
   @Post('posts/:id/like')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
@@ -71,7 +57,6 @@ export class CommunityController {
     return this.communityService.likePost(id, String(user._id));
   }
 
-  // POST /community/posts/:id/comments — teenlancers only
   @Post('posts/:id/comments')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
@@ -88,7 +73,6 @@ export class CommunityController {
     );
   }
 
-  // GET /community/posts/:id/comments — public
   @Get('posts/:id/comments')
   getComments(@Param('id') id: string) {
     return this.communityService.getComments(id);
