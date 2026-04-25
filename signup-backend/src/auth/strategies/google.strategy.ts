@@ -12,11 +12,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private readonly usersService: UsersService,
   ) {
     super({
-      clientID: config.get<string>('GOOGLE_CLIENT_ID') || '1065255643053-8mj1rIv0qu6qgb9kbh7g608q8dtvu8hf.apps.googleusercontent.com',
-      clientSecret: config.get<string>('GOOGLE_CLIENT_SECRET') || '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',
-      callbackURL: config.get<string>('GOOGLE_CALLBACK_URL') || 'http://localhost:3000/auth/google/callback',
-      scope: ['email', 'profile'],
-    });
+  clientID: '1065255643053-8mj1rIv0qu6qgb9kbh7g608q8dtvu8hf.apps.googleusercontent.com',
+  clientSecret: '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',
+  callbackURL: 'http://localhost:3000/auth/google/callback',
+  scope: ['email', 'profile'],
+});
   }
 
   async validate(

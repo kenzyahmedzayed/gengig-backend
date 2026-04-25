@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service.js';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto.js';
-import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ForgotPasswordDto } from './dto/forget-password.dto';
 
 import { RegisterDto } from './dto/register.dto.js';
 
@@ -44,7 +44,7 @@ export class AuthService {
           slug: user.slug,
         },
       };
-    } catch (err) {
+    } catch (err : any) {
       console.error("REGISTER ERROR =>", err);
       throw new Error(`DEBUG: ${err.message}`);
     }

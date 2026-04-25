@@ -3,34 +3,90 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
+export enum UserRole {
+  TEENLANCER = 'teenlancer',
+  AGENT = 'agent',
+  ADMIN = 'admin',
+}
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true })
-  name: string;
+  name!: string;
 
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
-  email: string;
+  email!: string;
 
   @Prop({ required: true, select: false })
-  password: string;
+  password!: string;
 
   @Prop({ default: false })
-  isEmailVerified: boolean;
+  isEmailVerified!: boolean;
+
+  @Prop({ enum: UserRole, default: UserRole.TEENLANCER })
+  role!: UserRole;
 
   @Prop({ select: false })
-  emailVerificationToken?: string;
+  verificationCode?: string;
 
   @Prop({ select: false })
-  emailVerificationExpires?: Date;
+  verificationCodeExpires?: Date;
 
-  // 🔗 Slug: auto-generated URL-friendly identifier, e.g. "john-doe-a1b2"
   @Prop({ unique: true, lowercase: true, trim: true })
-  slug: string;
+  slug?: string;
+
+  // Profile fields
+  @Prop()
+  photo?: string;
+
+  @Prop()
+  bio?: string;
+
+  @Prop()
+  education?: string;
+
+  @Prop()
+  location?: string;
+
+  @Prop({ type: [String], default: [] })
+  skills?: string[];
+
+  @Prop()
+  availability?: string;
+
+  @Prop()
+  rate?: number;
+
+  // Agent fields
+  @Prop()
+  company?: string;
+
+  @Prop()
+  industry?: string;
+
+  @Prop({ type: [String], default: [] })
+  workTypes?: string[];
+
+  // Onboarding
+  @Prop({ default: false })
+  isOnboardingComplete?: boolean;
+
+  // Settings
+  @Prop({ type: Object, default: {} })
+  notificationPreferences?: Record<string, boolean>;
+
+  // Portfolio
+  @Prop({ type: [Object], default: [] })
+  portfolio?: Array<{
+    title: string;
+    category: string;
+    img: string;
+  }>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Auto-generate slug from name before saving (e.g. "John Doe" → "john-doe-a1b2")
+// Auto-generate slug from name before saving
 UserSchema.pre('save', function () {
   if (this.isNew || this.isModified('name')) {
     const base = (this as any).name

@@ -2,7 +2,7 @@ import { Controller, Post, Body } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
-import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ForgotPasswordDto } from './dto/forget-password.dto.js';
 
 import { RegisterDto } from './dto/register.dto.js';
 
