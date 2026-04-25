@@ -24,20 +24,21 @@ export class User {
   isEmailVerified!: boolean;
 
   @Prop({ enum: UserRole, default: UserRole.TEENLANCER })
-role!: UserRole;
+  role!: UserRole;
 
   @Prop({ select: false })
   verificationCode?: string;
 
   @Prop({ select: false })
   verificationCodeExpires?: Date;
+
+  @Prop({ unique: true, lowercase: true, trim: true })
+  slug?: string;
+
+  // Profile fields
   @Prop()
   photo?: string;
 
-  @Prop({ type: Object, default: {} })
-notificationPreferences?: Record<string, boolean>;
-
-  // Teenlancer fields
   @Prop()
   bio?: string;
 
@@ -66,15 +67,34 @@ notificationPreferences?: Record<string, boolean>;
   @Prop({ type: [String], default: [] })
   workTypes?: string[];
 
+  // Onboarding
   @Prop({ default: false })
   isOnboardingComplete?: boolean;
-  
+
+  // Settings
+  @Prop({ type: Object, default: {} })
+  notificationPreferences?: Record<string, boolean>;
+
+  // Portfolio
   @Prop({ type: [Object], default: [] })
-portfolio?: Array<{
-  title: string;
-  category: string;
-  img: string;
-}>;
+  portfolio?: Array<{
+    title: string;
+    category: string;
+    img: string;
+  }>;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// Auto-generate slug from name before saving
+UserSchema.pre('save', function () {
+  if (this.isNew || this.isModified('name')) {
+    const base = (this as any).name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+    const suffix = Math.random().toString(36).substring(2, 6);
+    (this as any).slug = `${base}-${suffix}`;
+  }
+});
