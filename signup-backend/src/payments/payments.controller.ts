@@ -1,8 +1,7 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
-import { PaymentsService } from './payments.service';
-import { SaveCardDto } from './dto/save-card.dto';
+import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PaymentsService } from './payments.service';
 import type { UserDocument } from '../users/users.schema';
 
 @Controller('payments')
@@ -10,39 +9,27 @@ import type { UserDocument } from '../users/users.schema';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Get('cards')
-  getCards(@CurrentUser() user: UserDocument) {
-    return this.paymentsService.getCards(String(user._id));
-  }
-
-  @Post('save-card')
-  @HttpCode(HttpStatus.CREATED)
-  saveCard(
-    @CurrentUser() user: UserDocument,
-    @Body() dto: SaveCardDto,
-  ) {
-    return this.paymentsService.saveCard(String(user._id), dto);
-  }
-
-  @Delete('cards/:id')
+  // POST /payments/initiate — start a payment
+  @Post('initiate')
   @HttpCode(HttpStatus.OK)
-  deleteCard(
-    @Param('id') id: string,
+  async initiatePayment(
     @CurrentUser() user: UserDocument,
+    @Body() body: { amount: number },
   ) {
-    return this.paymentsService.deleteCard(id, String(user._id));
+    return this.paymentsService.initiatePayment(
+      String(user._id),
+      body.amount,
+      {
+        name: user.name,
+        email: user.email,
+      },
+    );
   }
 
-  @Get('transactions')
-  getTransactions(@CurrentUser() user: UserDocument) {
-    return this.paymentsService.getTransactions(String(user._id));
+  // POST /payments/callback — Paymob calls this after payment
+  @Post('callback')
+  @HttpCode(HttpStatus.OK)
+  async handleCallback(@Body() data: any) {
+    return this.paymentsService.handleCallback(data);
   }
-@Post('withdraw')
-@HttpCode(HttpStatus.OK)
-withdraw(
-  @CurrentUser() user: UserDocument,
-  @Body() body: any,
-) {
-  return this.paymentsService.withdraw(String(user._id), body.amount);
-}
 }
