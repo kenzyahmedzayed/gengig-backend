@@ -7,11 +7,18 @@ import * as Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
+import { GigsModule } from './gigs/gigs.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { ChatModule } from './chat/chat.module';
+import { CommunityModule } from './community/community.module';
+import { ReviewsModule } from './reviews/review.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PaymentsModule } from './payments/payments.module';
+import { SupportModule } from './support/support.module';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 
 @Module({
   imports: [
-    // ✅ Env Validation: crashes at startup if required vars are missing
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object({
@@ -29,17 +36,24 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
       }),
     }),
 
-    // 🚦 Rate Limiting: max 10 requests per 60 seconds globally
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: 10,
+        limit: 100,
       },
     ]),
 
     UsersModule,
     MailModule,
     AuthModule,
+    GigsModule,
+    ApplicationsModule,
+    ChatModule,
+    CommunityModule,
+    ReviewsModule,
+    NotificationsModule,
+    PaymentsModule,
+    SupportModule,
   ],
   providers: [
     {
@@ -49,7 +63,6 @@ import { LoggerMiddleware } from './common/middleware/logger.middleware';
   ],
 })
 export class AppModule implements NestModule {
-  // 📋 Logger Middleware: logs every incoming request across all routes
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
   }
