@@ -44,9 +44,27 @@ export class ApplicationsController {
     return this.applicationsService.accept(id, String(user._id));
   }
 
+  @Put('agent/applications/:id/accept')
+  @HttpCode(HttpStatus.OK)
+  acceptAlias(
+    @Param('id') id: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.applicationsService.accept(id, String(user._id));
+  }
+
   @Put('applications/:id/reject')
   @HttpCode(HttpStatus.OK)
   reject(
+    @Param('id') id: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.applicationsService.reject(id, String(user._id));
+  }
+
+  @Put('agent/applications/:id/reject')
+  @HttpCode(HttpStatus.OK)
+  rejectAlias(
     @Param('id') id: string,
     @CurrentUser() user: UserDocument,
   ) {

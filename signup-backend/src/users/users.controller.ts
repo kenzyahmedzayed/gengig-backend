@@ -114,7 +114,7 @@ updateNotifications(
 }
 @Post('upload-photo')
 @UseGuards(JwtAuthGuard)
-@UseInterceptors(FileInterceptor('photo'))
+@UseInterceptors(FileInterceptor('photo', { storage: memoryStorage() }))
 async uploadPhoto(
   @CurrentUser() user: UserDocument,
   @UploadedFile() file: Express.Multer.File,
@@ -181,8 +181,13 @@ getTeenlancers(@Query() query: any) {
   return this.usersService.getTeenlancers(query);
 }
 
+@Get('search')
+searchUsers(@Query('q') q: string, @Query('role') role: string) {
+  return this.usersService.searchUsers(q || '', role);
+}
+
 @Post('/uploads/image')
-@UseInterceptors(FileInterceptor('image'))
+@UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
 async uploadImage(
   @UploadedFile() file: Express.Multer.File,
 ) {

@@ -129,7 +129,7 @@ async googleCallback(
   @Res() res: any,
 ) {
   const token = await this.authService.generateAccessTokenPublic(user);
-  const frontendUrl = `http://localhost:5173/auth/google/success?token=${token}&role=${user.role}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
+  const frontendUrl = `http://localhost:5173/auth/google/success?token=${token}&id=${String(user._id)}&role=${user.role}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&photo=${encodeURIComponent(user.photo || '')}`;
   return res.redirect(frontendUrl);
 }
 }

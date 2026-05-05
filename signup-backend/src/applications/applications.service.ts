@@ -35,8 +35,8 @@ export class ApplicationsService {
     return application.save();
   }
 
-  async findByAgent(agentId: string): Promise<ApplicationDocument[]> {
-    return this.applicationModel
+  async findByAgent(agentId: string): Promise<any[]> {
+    const apps = await this.applicationModel
       .find()
       .populate({
         path: 'gig',
@@ -45,6 +45,22 @@ export class ApplicationsService {
       .populate('appliedBy', 'name email photo bio skills')
       .exec()
       .then(apps => apps.filter(app => app.gig !== null));
+
+    return apps.map(app => ({
+      id: String(app._id),
+      applicant: {
+        id: String((app.appliedBy as any)._id),
+        name: (app.appliedBy as any).name,
+        photo: (app.appliedBy as any).photo || '',
+        skills: (app.appliedBy as any).skills || [],
+        bio: (app.appliedBy as any).bio || '',
+      },
+      gigTitle: (app.gig as any).title,
+      coverLetter: app.coverLetter,
+      portfolioLink: app.portfolioLink,
+      status: app.status,
+      appliedAt: (app as any).createdAt,
+    }));
   }
 
   async getCounts(agentId: string): Promise<any> {
