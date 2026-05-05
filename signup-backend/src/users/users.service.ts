@@ -116,6 +116,30 @@ async getPlatformStats(): Promise<any> {
     avgRating: 4.8,
   };
 }
+async searchUsers(query: string, role?: string): Promise<any[]> {
+  const filter: any = {};
+  if (role) filter.role = role;
+  if (query) {
+    filter.$or = [
+      { name: { $regex: query, $options: 'i' } },
+    ];
+  }
+  const users = await this.userModel
+    .find(filter)
+    .select('name photo skills bio role')
+    .limit(10)
+    .exec();
+
+  return users.map(u => ({
+    id: String(u._id),
+    name: u.name,
+    photo: u.photo || '',
+    skills: u.skills || [],
+    bio: u.bio || '',
+    role: u.role,
+  }));
+}
+
 async getTeenlancers(query: any): Promise<any> {
   const filter: any = { role: 'teenlancer' };
 

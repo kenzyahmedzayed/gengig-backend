@@ -1,12 +1,13 @@
 import { Controller, Post, UseInterceptors, UploadedFile, BadRequestException, HttpCode, HttpStatus, } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { cloudinary } from '../users/cloudinary.config';
 
 @Controller('uploads')
 export class UploadsController {
   @Post('image')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', { storage: memoryStorage() }))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -29,7 +30,7 @@ export class UploadsController {
   // POST /uploads/file
 @Post('file')
 @HttpCode(HttpStatus.OK)
-@UseInterceptors(FileInterceptor('file'))
+@UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
 async uploadFile(@UploadedFile() file: Express.Multer.File) {
   if (!file) {
     throw new BadRequestException('No file uploaded');

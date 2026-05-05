@@ -200,6 +200,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   return {
   message: 'Login Successful',
   token: token,
+  id: String(user._id),
   role: user.role,
   name: user.name,
   email: user.email,
@@ -212,7 +213,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   company: user.company || '',
   industry: user.industry || '',
   user: {
-    id: user._id,
+    id: String(user._id),
     name: user.name,
     email: user.email,
     role: user.role,
