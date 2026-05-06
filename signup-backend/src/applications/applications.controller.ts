@@ -73,4 +73,10 @@ export class ApplicationsController {
   getAgentDashboard(@CurrentUser() user: UserDocument) {
   return this.applicationsService.getAgentDashboard(String(user._id));
   }
+  // GET /teenlancer/applications
+@Get('/teenlancer/applications')
+@UseGuards(JwtAuthGuard)
+getTeenlancerApplications(@CurrentUser() user: UserDocument) {
+  return this.applicationsService.findByTeenlancer(String(user._id));
+}
 }

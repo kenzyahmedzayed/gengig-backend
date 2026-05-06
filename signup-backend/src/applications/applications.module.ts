@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Application, ApplicationSchema } from './application.schema';
-import { ApplicationsService } from './applications.service';
 import { ApplicationsController } from './applications.controller';
+import { ApplicationsService } from './applications.service';
+import { Application, ApplicationSchema } from './application.schema';
+import { Gig, GigSchema } from '../gigs/gig.schema';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Application.name, schema: ApplicationSchema },
+      { name: Gig.name, schema: GigSchema },
     ]),
+    NotificationsModule,
   ],
-  providers: [ApplicationsService],
   controllers: [ApplicationsController],
-  exports: [ApplicationsService],
+  providers: [ApplicationsService],
 })
 export class ApplicationsModule {}

@@ -78,14 +78,16 @@ export class GigsService {
   }
 
   async findById(id: string): Promise<GigDocument> {
-    const gig = await this.gigModel
-      .findById(id)
-      .populate('postedBy', 'name email photo')
-      .exec();
-
-    if (!gig) throw new NotFoundException('Gig not found');
-    return gig;
+  if (!id || id === 'undefined') {
+    throw new NotFoundException('Invalid gig ID');
   }
+  const gig = await this.gigModel
+    .findById(id)
+    .populate('postedBy', 'name photo company')
+    .exec();
+  if (!gig) throw new NotFoundException('Gig not found');
+  return gig;
+}
 
   async findByAgent(agentId: string, status?: string): Promise<GigDocument[]> {
   const filter: any = { postedBy: agentId };
@@ -135,5 +137,11 @@ async getRelated(gigId: string): Promise<GigDocument[]> {
 
 async saveGig(gigId: string, userId: string): Promise<any> {
   return { message: 'Gig saved successfully', gigId, userId };
+}
+async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
+  const gig = await this.gigModel.findOne({ _id: gigId, postedBy: agentId });
+  if (!gig) throw new NotFoundException('Gig not found');
+  gig.status = 'completed';
+  return gig.save();
 }
 }

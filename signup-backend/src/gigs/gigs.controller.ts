@@ -140,4 +140,12 @@ saveGig(
 ) {
   return this.gigsService.saveGig(id, String(user._id));
 }
+@Put(':id/complete')
+@UseGuards(JwtAuthGuard)
+async completeGig(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+) {
+  return this.gigsService.completeGig(id, String(user._id));
+}
 }

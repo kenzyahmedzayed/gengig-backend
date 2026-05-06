@@ -37,14 +37,16 @@ export class Gig {
   @Prop({ type: [String], default: [] })
   requirements!: string[];
 
-  @Prop({ enum: GigStatus, default: GigStatus.OPEN })
-  status!: string;
+  @Prop({ default: 'open', enum: ['open', 'active', 'completed', 'draft'] })
+status?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   postedBy!: Types.ObjectId;
 
   @Prop({ default: false })
   isFeatured!: boolean;
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+acceptedTeenlancer?: Types.ObjectId;
 }
 
 export const GigSchema = SchemaFactory.createForClass(Gig);
