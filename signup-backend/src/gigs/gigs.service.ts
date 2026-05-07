@@ -78,19 +78,40 @@ export class GigsService {
   }
 
   async findById(id: string): Promise<GigDocument> {
-    const gig = await this.gigModel
-      .findById(id)
-      .populate('postedBy', 'name email photo')
-      .exec();
+  if (!id || id === 'undefined') {
+    throw new NotFoundException('Invalid gig ID');
+  }
+  const gig = await this.gigModel
+    .findById(id)
+    .populate('postedBy', 'name photo company')
+    .exec();
+  if (!gig) throw new NotFoundException('Gig not found');
+  return gig;
+}
 
-    if (!gig) throw new NotFoundException('Gig not found');
-    return gig;
+  async findByAgent(agentId: string, status?: string): Promise<any[]> {
+  const filter: any = { postedBy: agentId };
+  if (status && status !== 'all') {
+    filter.status = status.toLowerCase();
   }
 
-  async findByAgent(agentId: string, status?: string): Promise<GigDocument[]> {
-  const filter: any = { postedBy: agentId };
-  if (status) filter.status = status;
-  return this.gigModel.find(filter).exec();
+  const gigs = await this.gigModel
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return gigs.map(gig => ({
+    _id: gig._id,
+    title: gig.title,
+    category: gig.category,
+    budget: gig.budget,
+    status: gig.status,
+    deadline: gig.deadline,
+    duration: gig.duration,
+    skills: gig.skills,
+    isFeatured: gig.isFeatured,
+    createdAt: (gig as any).createdAt,
+  }));
 }
 
   async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
@@ -135,5 +156,11 @@ async getRelated(gigId: string): Promise<GigDocument[]> {
 
 async saveGig(gigId: string, userId: string): Promise<any> {
   return { message: 'Gig saved successfully', gigId, userId };
+}
+async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
+  const gig = await this.gigModel.findOne({ _id: gigId, postedBy: agentId });
+  if (!gig) throw new NotFoundException('Gig not found');
+  gig.status = 'completed';
+  return gig.save();
 }
 }

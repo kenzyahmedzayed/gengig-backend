@@ -148,4 +148,12 @@ async getTeenlancers(query: any): Promise<any> {
     availability: t.availability || '',
   }));
 }
+async getAgentStats(agentId: string): Promise<any> {
+  return {
+    totalSpent: '$0',
+    teenlancersHired: 0,
+    completedGigs: 0,
+    avgPerGig: '—',
+  };
+}
 }

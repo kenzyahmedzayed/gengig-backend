@@ -1,13 +1,24 @@
-import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect,} from '@nestjs/websockets';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagingService } from './messaging.service';
 
 @WebSocketGateway({
   cors: {
     origin: '*',
+    credentials: true,
   },
+  transports: ['websocket', 'polling'],
 })
-export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
@@ -15,13 +26,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(private readonly messagingService: MessagingService) {}
 
+  afterInit(server: Server) {
+    console.log('WebSocket server initialized');
+  }
+
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    
+    if (!this.server) return;
     for (const [userId, socketId] of this.connectedUsers.entries()) {
       if (socketId === client.id) {
         this.connectedUsers.delete(userId);
@@ -36,9 +51,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { userId: string },
     @ConnectedSocket() client: Socket,
   ) {
+    if (!data?.userId || !this.server) return;
     this.connectedUsers.set(data.userId, client.id);
     client.join(data.userId);
     this.server.emit('user_online', { userId: data.userId });
+    const onlineUsers = Array.from(this.connectedUsers.keys());
+    client.emit('online_users', { users: onlineUsers });
     console.log(`User ${data.userId} joined`);
   }
 
@@ -47,21 +65,30 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     @MessageBody() data: { senderId: string; receiverId: string; content: string },
     @ConnectedSocket() client: Socket,
   ) {
+    if (!data?.senderId || !data?.receiverId || !data?.content) return;
+
     const message = await this.messagingService.sendMessage(
       data.senderId,
       data.receiverId,
       data.content,
     );
 
-    this.server.to(data.receiverId).emit('receive_message', message);
+    this.server.to(data.receiverId).emit('receive_message', {
+      ...message,
+      isMine: false,
+    });
 
-    client.emit('message_sent', message);
+    client.emit('message_sent', {
+      ...message,
+      isMine: true,
+    });
   }
 
   @SubscribeMessage('mark_read')
   async handleMarkRead(
     @MessageBody() data: { userId: string; otherUserId: string },
   ) {
+    if (!data?.userId || !data?.otherUserId) return;
     await this.messagingService.markAsRead(data.userId, data.otherUserId);
     this.server.to(data.otherUserId).emit('messages_read', {
       by: data.userId,
@@ -72,6 +99,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleTyping(
     @MessageBody() data: { senderId: string; receiverId: string },
   ) {
+    if (!data?.senderId || !data?.receiverId) return;
     this.server.to(data.receiverId).emit('user_typing', {
       userId: data.senderId,
     });
@@ -81,6 +109,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleStopTyping(
     @MessageBody() data: { senderId: string; receiverId: string },
   ) {
+    if (!data?.senderId || !data?.receiverId) return;
     this.server.to(data.receiverId).emit('user_stop_typing', {
       userId: data.senderId,
     });
