@@ -9,6 +9,7 @@ import { ReviewsController } from './review.controller';
     MongooseModule.forFeature([
       { name: Review.name, schema: ReviewSchema },
     ]),
+    
   ],
   providers: [ReviewsService],
   controllers: [ReviewsController],
