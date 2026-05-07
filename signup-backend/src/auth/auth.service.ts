@@ -197,9 +197,10 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
     },
   );
 
-  return {
+ return {
   message: 'Login Successful',
   token: token,
+  userId: String(user._id), // ← add this
   role: user.role,
   name: user.name,
   email: user.email,
@@ -212,12 +213,13 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   company: user.company || '',
   industry: user.industry || '',
   user: {
-    id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    photo: user.photo || '',
-  }
+  id: String(user._id),
+  _id: String(user._id),
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  photo: user.photo || '',
+}
 };
 }
 

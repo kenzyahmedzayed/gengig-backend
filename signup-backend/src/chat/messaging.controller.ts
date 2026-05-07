@@ -16,11 +16,15 @@ class SendMessageDto {
 export class MessagingController {
   constructor(private readonly messagingService: MessagingService) {}
 
-  @Get('contacts')
-  getContacts(@CurrentUser() user: UserDocument) {
-    return this.messagingService.getContacts(String(user._id));
+@Get('contacts')
+async getContacts(@CurrentUser() user: UserDocument) {
+  const userId = String(user._id);
+  console.log('getContacts called with userId:', userId);
+  if (!userId || userId === 'undefined' || userId === '') {
+    return [];
   }
-
+  return this.messagingService.getContacts(userId);
+}
   @Get('messages/:userId')
   getMessages(
     @CurrentUser() user: UserDocument,

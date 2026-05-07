@@ -5,6 +5,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -24,9 +25,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   app.enableCors({
-    origin: true,
+    origin: ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
   });
+
+  // Configure Socket.io adapter with CORS
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Swagger setup
   const config = new DocumentBuilder()

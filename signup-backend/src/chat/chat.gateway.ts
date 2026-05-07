@@ -14,9 +14,10 @@ import { MessagingService } from './messaging.service';
 @WebSocketGateway({
   cors: {
     origin: '*',
-    credentials: true,
+    credentials: false,
   },
   transports: ['websocket', 'polling'],
+  namespace: '/',
 })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -27,7 +28,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   constructor(private readonly messagingService: MessagingService) {}
 
   afterInit(server: Server) {
-    console.log('WebSocket server initialized');
+    console.log('WebSocket server initialized ✅');
   }
 
   handleConnection(client: Socket) {
@@ -57,7 +58,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     this.server.emit('user_online', { userId: data.userId });
     const onlineUsers = Array.from(this.connectedUsers.keys());
     client.emit('online_users', { users: onlineUsers });
-    console.log(`User ${data.userId} joined`);
+    console.log(`User ${data.userId} joined ✅`);
   }
 
   @SubscribeMessage('send_message')
@@ -73,11 +74,13 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.content,
     );
 
+    // Send to receiver
     this.server.to(data.receiverId).emit('receive_message', {
       ...message,
       isMine: false,
     });
 
+    // Confirm to sender
     client.emit('message_sent', {
       ...message,
       isMine: true,
@@ -113,5 +116,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     this.server.to(data.receiverId).emit('user_stop_typing', {
       userId: data.senderId,
     });
+  }
+
+  // Method to emit from other services
+  emitToUser(userId: string, event: string, data: any) {
+    this.server.to(userId).emit(event, data);
   }
 }
