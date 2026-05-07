@@ -206,4 +206,9 @@ async uploadImage(
     url: (result as any).secure_url,
   };
 }
+@Get('agent/stats')
+@UseGuards(JwtAuthGuard)
+getAgentStats(@CurrentUser() user: UserDocument) {
+  return this.usersService.getAgentStats(String(user._id));
+}
 }

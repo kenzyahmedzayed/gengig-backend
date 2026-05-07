@@ -4,15 +4,15 @@ import { ApplicationsController } from './applications.controller';
 import { ApplicationsService } from './applications.service';
 import { Application, ApplicationSchema } from './application.schema';
 import { Gig, GigSchema } from '../gigs/gig.schema';
-import { NotificationsModule } from '../notifications/notifications.module';
+import { Notification, NotificationSchema } from '../notifications/notification.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: Application.name, schema: ApplicationSchema },
       { name: Gig.name, schema: GigSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
-    NotificationsModule,
   ],
   controllers: [ApplicationsController],
   providers: [ApplicationsService],

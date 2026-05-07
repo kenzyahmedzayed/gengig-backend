@@ -79,4 +79,21 @@ export class ApplicationsController {
 getTeenlancerApplications(@CurrentUser() user: UserDocument) {
   return this.applicationsService.findByTeenlancer(String(user._id));
 }
+@Put('agent/applications/:id/accept')
+@HttpCode(HttpStatus.OK)
+acceptByAgent(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+) {
+  return this.applicationsService.accept(id, String(user._id));
+}
+
+@Put('agent/applications/:id/reject')
+@HttpCode(HttpStatus.OK)
+rejectByAgent(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+) {
+  return this.applicationsService.reject(id, String(user._id));
+}
 }

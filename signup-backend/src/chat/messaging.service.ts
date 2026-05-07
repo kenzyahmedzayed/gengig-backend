@@ -11,42 +11,48 @@ export class MessagingService {
   ) {}
 
   async getContacts(userId: string): Promise<any[]> {
-  const messages = await this.messageModel
-    .find({
-      $or: [{ sender: userId }, { receiver: userId }],
-    })
-    .populate('sender', 'name photo role')
-    .populate('receiver', 'name photo role')
-    .sort({ createdAt: -1 })
-    .exec();
+  try {
+    const messages = await this.messageModel
+      .find({
+        $or: [{ sender: userId }, { receiver: userId }],
+      })
+      .populate('sender', 'name photo role')
+      .populate('receiver', 'name photo role')
+      .sort({ createdAt: -1 })
+      .exec();
 
-  const contactsMap = new Map();
-  for (const msg of messages) {
-    const other = String((msg.sender as any)._id) === userId
-      ? msg.receiver
-      : msg.sender;
-    const otherId = String((other as any)._id);
-    
-    if (!contactsMap.has(otherId)) {
-      const unreadCount = await this.messageModel.countDocuments({
-        sender: otherId,
-        receiver: userId,
-        isRead: false,
-      });
+    const contactsMap = new Map();
+    for (const msg of messages) {
+      const senderStr = String((msg.sender as any)._id);
+      const other = senderStr === userId ? msg.receiver : msg.sender;
+      const otherId = String((other as any)._id);
 
-      contactsMap.set(otherId, {
-        id: otherId,
-        name: (other as any).name,
-        photo: (other as any).photo || '',
-        role: (other as any).role,
-        lastMessage: msg.content,
-        lastMessageTime: (msg as any).createdAt,
-        unreadCount,
-      });
+      if (!otherId || otherId === 'undefined') continue;
+
+      if (!contactsMap.has(otherId)) {
+        const unreadCount = await this.messageModel.countDocuments({
+          sender: otherId,
+          receiver: userId,
+          isRead: false,
+        });
+
+        contactsMap.set(otherId, {
+          id: otherId,
+          name: (other as any).name || 'Unknown',
+          photo: (other as any).photo || '',
+          role: (other as any).role || '',
+          lastMessage: msg.content,
+          lastMessageTime: (msg as any).createdAt,
+          unreadCount,
+        });
+      }
     }
-  }
 
-  return Array.from(contactsMap.values());
+    return Array.from(contactsMap.values());
+  } catch (err: any) {
+    console.error('getContacts error:', err);
+    return [];
+  }
 }
 
   async getMessages(userId: string, otherUserId: string): Promise<MessageDocument[]> {

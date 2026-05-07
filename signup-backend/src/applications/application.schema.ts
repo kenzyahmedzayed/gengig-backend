@@ -25,6 +25,15 @@ export class Application {
 
   @Prop()
   portfolioLink?: string;
+
+  @Prop()
+  proposedRate?: string;
+
+  @Prop()
+  deliveryTimeline?: string;
+
+  @Prop()
+  sampleWork?: string;
 }
 
 export const ApplicationSchema = SchemaFactory.createForClass(Application);

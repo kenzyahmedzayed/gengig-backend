@@ -89,10 +89,29 @@ export class GigsService {
   return gig;
 }
 
-  async findByAgent(agentId: string, status?: string): Promise<GigDocument[]> {
+  async findByAgent(agentId: string, status?: string): Promise<any[]> {
   const filter: any = { postedBy: agentId };
-  if (status) filter.status = status;
-  return this.gigModel.find(filter).exec();
+  if (status && status !== 'all') {
+    filter.status = status.toLowerCase();
+  }
+
+  const gigs = await this.gigModel
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return gigs.map(gig => ({
+    _id: gig._id,
+    title: gig.title,
+    category: gig.category,
+    budget: gig.budget,
+    status: gig.status,
+    deadline: gig.deadline,
+    duration: gig.duration,
+    skills: gig.skills,
+    isFeatured: gig.isFeatured,
+    createdAt: (gig as any).createdAt,
+  }));
 }
 
   async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
