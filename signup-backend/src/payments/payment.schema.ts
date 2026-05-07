@@ -9,19 +9,19 @@ export class PaymentCard {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId!: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   cardHolderName!: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   lastFourDigits!: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   expiryMonth!: string;
 
-  @Prop({ required: true })
+  @Prop({ default: '' })
   expiryYear!: string;
 
-  @Prop({ required: true })
+  @Prop({ default: 'Visa' })
   cardType!: string;
 
   @Prop({ default: false })

@@ -189,6 +189,9 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
     throw new UnauthorizedException('Invalid email or password');
   }
 
+  // Fetch full user data including photo
+  const fullUser = await this.usersService.findById(String(user._id));
+
   const token = await this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
@@ -197,30 +200,30 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
     },
   );
 
- return {
-  message: 'Login Successful',
-  token: token,
-  userId: String(user._id), // ← add this
-  role: user.role,
-  name: user.name,
-  email: user.email,
-  photo: user.photo || '',
-  bio: user.bio || '',
-  skills: user.skills || [],
-  hourlyRate: user.rate || 0,
-  availability: user.availability || '',
-  location: '',
-  company: user.company || '',
-  industry: user.industry || '',
-  user: {
-  id: String(user._id),
-  _id: String(user._id),
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  photo: user.photo || '',
-}
-};
+  return {
+    message: 'Login Successful',
+    token,
+    userId: String(user._id),
+    role: fullUser?.role || user.role,
+    name: fullUser?.name || user.name,
+    email: fullUser?.email || user.email,
+    photo: fullUser?.photo || '',
+    bio: fullUser?.bio || '',
+    skills: fullUser?.skills || [],
+    hourlyRate: fullUser?.rate || 0,
+    availability: fullUser?.availability || '',
+    location: '',
+    company: fullUser?.company || '',
+    industry: fullUser?.industry || '',
+    user: {
+      id: String(user._id),
+      _id: String(user._id),
+      name: fullUser?.name || user.name,
+      email: fullUser?.email || user.email,
+      role: fullUser?.role || user.role,
+      photo: fullUser?.photo || '',
+    }
+  };
 }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {

@@ -1,27 +1,42 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class SaveCardDto {
   @IsString()
-  @IsNotEmpty()
-  cardHolderName!: string;
+  @IsOptional()
+  cardHolderName?: string;
 
   @IsString()
-  @IsNotEmpty()
-  lastFourDigits!: string;
+  @IsOptional()
+  nameOnCard?: string;
 
   @IsString()
-  @IsNotEmpty()
-  expiryMonth!: string;
+  @IsOptional()
+  lastFourDigits?: string;
 
   @IsString()
-  @IsNotEmpty()
-  expiryYear!: string;
+  @IsOptional()
+  cardNumber?: string;
 
   @IsString()
-  @IsNotEmpty()
-  cardType!: string;
+  @IsOptional()
+  expiryMonth?: string;
+
+  @IsString()
+  @IsOptional()
+  expiryYear?: string;
+
+  @IsString()
+  @IsOptional()
+  expiryDate?: string;
+
+  @IsString()
+  @IsOptional()
+  cardType?: string;
 
   @IsOptional()
-  @IsBoolean()
   isDefault?: boolean;
+
+  @IsString()
+  @IsOptional()
+  cvv?: string;
 }

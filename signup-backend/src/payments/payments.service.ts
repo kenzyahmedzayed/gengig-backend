@@ -22,13 +22,37 @@ export class PaymentsService {
     this.integrationId = this.configService.get<string>('PAYMOB_INTEGRATION_ID') || '';
   }
 
-  async saveCard(userId: string, dto: SaveCardDto): Promise<any> {
-    const card = await this.cardModel.create({
-      userId,
-      ...dto,
-    });
-    return card;
+  async saveCard(userId: string, dto: any): Promise<any> {
+  const cardHolderName = dto.cardHolderName || dto.nameOnCard || dto.name || 'Card Holder';
+  const cardNumber = dto.cardNumber || '';
+  const lastFourDigits = dto.lastFourDigits || 
+                         (cardNumber ? cardNumber.replace(/\s/g, '').slice(-4) : '0000');
+  
+  let expiryMonth = dto.expiryMonth || '';
+  let expiryYear = dto.expiryYear || '';
+  
+  if (dto.expiryDate && dto.expiryDate.includes('/')) {
+    const parts = dto.expiryDate.split('/');
+    expiryMonth = parts[0]?.trim() || '01';
+    expiryYear = parts[1]?.trim() || '26';
   }
+
+  // Final fallbacks
+  if (!expiryMonth) expiryMonth = '01';
+  if (!expiryYear) expiryYear = '26';
+
+  const card = await this.cardModel.create({
+    userId,
+    cardHolderName,
+    lastFourDigits,
+    expiryMonth,
+    expiryYear,
+    cardType: dto.cardType || 'Visa',
+    isDefault: dto.isDefault || false,
+  });
+
+  return card;
+}
 
   async getCards(userId: string): Promise<any[]> {
     return this.cardModel.find({ userId }).exec();
