@@ -12,49 +12,69 @@ export class MessagingService {
 
   async getContacts(userId: string): Promise<any[]> {
   try {
+    if (!userId || userId === '' || userId === 'undefined') {
+      return [];
+    }
+
+    // Only get messages with valid sender and receiver
     const messages = await this.messageModel
       .find({
         $or: [{ sender: userId }, { receiver: userId }],
+        sender: { $exists: true, $ne: null, $nin: ['', null] },
+        receiver: { $exists: true, $ne: null, $nin: ['', null] },
       })
-      .populate('sender', 'name photo role')
-      .populate('receiver', 'name photo role')
+      .populate('sender', 'name photo role _id')
+      .populate('receiver', 'name photo role _id')
       .sort({ createdAt: -1 })
       .exec();
 
     const contactsMap = new Map();
+
     for (const msg of messages) {
-      const senderStr = String((msg.sender as any)._id);
-      const other = senderStr === userId ? msg.receiver : msg.sender;
-      const otherId = String((other as any)._id);
+      try {
+        const sender = msg.sender as any;
+        const receiver = msg.receiver as any;
 
-      if (!otherId || otherId === 'undefined') continue;
+        if (!sender?._id || !receiver?._id) continue;
 
-      if (!contactsMap.has(otherId)) {
-        const unreadCount = await this.messageModel.countDocuments({
-          sender: otherId,
-          receiver: userId,
-          isRead: false,
-        });
+        const senderStr = String(sender._id);
+        const receiverStr = String(receiver._id);
 
-        contactsMap.set(otherId, {
-          id: otherId,
-          name: (other as any).name || 'Unknown',
-          photo: (other as any).photo || '',
-          role: (other as any).role || '',
-          lastMessage: msg.content,
-          lastMessageTime: (msg as any).createdAt,
-          unreadCount,
-        });
+        if (!senderStr || senderStr === '' || !receiverStr || receiverStr === '') continue;
+
+        const other = senderStr === userId ? receiver : sender;
+        const otherId = String(other._id);
+
+        if (!otherId || otherId === '' || otherId === 'undefined' || otherId === userId) continue;
+
+        if (!contactsMap.has(otherId)) {
+          const unreadCount = await this.messageModel.countDocuments({
+            sender: otherId,
+            receiver: userId,
+            isRead: false,
+          });
+
+          contactsMap.set(otherId, {
+            id: otherId,
+            name: other.name || 'Unknown',
+            photo: other.photo || '',
+            role: other.role || '',
+            lastMessage: msg.content,
+            lastMessageTime: (msg as any).createdAt,
+            unreadCount,
+          });
+        }
+      } catch (msgErr: any) {
+        continue;
       }
     }
 
     return Array.from(contactsMap.values());
   } catch (err: any) {
-    console.error('getContacts error:', err);
+    console.error('getContacts error:', err.message);
     return [];
   }
 }
-
   async getMessages(userId: string, otherUserId: string): Promise<MessageDocument[]> {
     return this.messageModel
       .find({
