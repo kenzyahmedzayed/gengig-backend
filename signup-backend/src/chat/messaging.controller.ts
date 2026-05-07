@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpCode, HttpStatus, } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { MessagingService } from './messaging.service';
+import { ChatGateway } from './chat.gateway';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { UserDocument } from '../users/users.schema';
@@ -14,17 +15,21 @@ class SendMessageDto {
 @Controller('chat')
 @UseGuards(JwtAuthGuard)
 export class MessagingController {
-  constructor(private readonly messagingService: MessagingService) {}
+  constructor(
+    private readonly messagingService: MessagingService,
+    private readonly chatGateway: ChatGateway,
+  ) {}
 
-@Get('contacts')
-async getContacts(@CurrentUser() user: UserDocument) {
-  const userId = String(user._id);
-  console.log('getContacts called with userId:', userId);
-  if (!userId || userId === 'undefined' || userId === '') {
-    return [];
+  @Get('contacts')
+  async getContacts(@CurrentUser() user: UserDocument) {
+    const userId = String(user._id);
+    console.log('getContacts called with userId:', userId);
+    if (!userId || userId === 'undefined' || userId === '') {
+      return [];
+    }
+    return this.messagingService.getContacts(userId);
   }
-  return this.messagingService.getContacts(userId);
-}
+
   @Get('messages/:userId')
   getMessages(
     @CurrentUser() user: UserDocument,
@@ -35,16 +40,30 @@ async getContacts(@CurrentUser() user: UserDocument) {
 
   @Post('messages/:userId')
   @HttpCode(HttpStatus.CREATED)
-  sendMessage(
+  async sendMessage(
     @CurrentUser() user: UserDocument,
     @Param('userId') receiverId: string,
     @Body() dto: SendMessageDto,
   ) {
-    return this.messagingService.sendMessage(
+    const message = await this.messagingService.sendMessage(
       String(user._id),
       receiverId,
       dto.content,
     );
+
+    // Emit real-time event to receiver
+    this.chatGateway.emitToUser(receiverId, 'receive_message', {
+      ...message,
+      isMine: false,
+    });
+
+    // Emit notification to receiver
+    this.chatGateway.emitToUser(receiverId, 'notification', {
+      type: 'new_message',
+      message: dto.content,
+    });
+
+    return message;
   }
 
   @Put('messages/:userId/read')
@@ -55,21 +74,21 @@ async getContacts(@CurrentUser() user: UserDocument) {
   ) {
     return this.messagingService.markAsRead(String(user._id), otherUserId);
   }
-  
-@Post('conversations')
-@HttpCode(HttpStatus.OK)
-async createConversation(
-  @CurrentUser() user: UserDocument,
-  @Body() body: any,
-) {
-  return this.messagingService.createConversation(
-    String(user._id),
-    body.userId,
-  );
-}
 
-@Get('unread-counts')
-getUnreadCounts(@CurrentUser() user: UserDocument) {
-  return this.messagingService.getUnreadCounts(String(user._id));
-}
+  @Post('conversations')
+  @HttpCode(HttpStatus.OK)
+  async createConversation(
+    @CurrentUser() user: UserDocument,
+    @Body() body: any,
+  ) {
+    return this.messagingService.createConversation(
+      String(user._id),
+      body.userId,
+    );
+  }
+
+  @Get('unread-counts')
+  getUnreadCounts(@CurrentUser() user: UserDocument) {
+    return this.messagingService.getUnreadCounts(String(user._id));
+  }
 }

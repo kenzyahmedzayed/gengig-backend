@@ -13,10 +13,6 @@ import { ReviewsModule } from './reviews/review.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { SupportModule } from './support/support.module';
-//<<<<<<< HEAD
-//import { LoggerMiddleware } from './common/middleware/logger.middleware';
-//=======
-//>>>>>>> parent of 17638ed (feat(security): implement Rate Limiting, Helmet, Slug Profiles, and Auth Register)
 
 @Module({
   imports: [
@@ -32,17 +28,6 @@ import { SupportModule } from './support/support.module';
           'mongodb+srv://gengig_db_user:gengig1004@cluster0.ijnyk5x.mongodb.net/gengig-backend?appName=Cluster0',
       }),
     }),
-//<<<<<<< HEAD
-
-/*   ThrottlerModule.forRoot([
-      {
-        ttl: 60000,
-        limit: 100,
-      },
-    ]),
-
-=======*/
-//>>>>>>> parent of 17638ed (feat(security): implement Rate Limiting, Helmet, Slug Profiles, and Auth Register)
     UsersModule,
     MailModule,
     AuthModule,
@@ -54,22 +39,6 @@ import { SupportModule } from './support/support.module';
     NotificationsModule,
     PaymentsModule,
     SupportModule,
-//<<<<<<< HEAD
-  ],
-  providers: [
-   // {
-    //  provide: APP_GUARD,
-    //  useClass: ThrottlerGuard,
-   // },
   ],
 })
-/*export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-  }
-}
-=======
-  ],
-})*/
 export class AppModule {}
-//>>>>>>> parent of 17638ed (feat(security): implement Rate Limiting, Helmet, Slug Profiles, and Auth Register)

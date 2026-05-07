@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import axios from 'axios';
+import { PaymentCard, PaymentCardDocument, Transaction, TransactionDocument } from './payment.schema';
+import { SaveCardDto } from './dto/save-card.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -11,12 +13,55 @@ export class PaymentsService {
 
   constructor(
     private readonly configService: ConfigService,
+    @InjectModel(PaymentCard.name)
+    private readonly cardModel: Model<PaymentCardDocument>,
+    @InjectModel(Transaction.name)
+    private readonly transactionModel: Model<TransactionDocument>,
   ) {
     this.apiKey = this.configService.get<string>('PAYMOB_API_KEY') || '';
     this.integrationId = this.configService.get<string>('PAYMOB_INTEGRATION_ID') || '';
   }
 
-  // Step A: Get Auth Token
+  async saveCard(userId: string, dto: SaveCardDto): Promise<any> {
+    const card = await this.cardModel.create({
+      userId,
+      ...dto,
+    });
+    return card;
+  }
+
+  async getCards(userId: string): Promise<any[]> {
+    return this.cardModel.find({ userId }).exec();
+  }
+
+  async deleteCard(userId: string, cardId: string): Promise<any> {
+    await this.cardModel.findOneAndDelete({ _id: cardId, userId });
+    return { message: 'Card deleted successfully' };
+  }
+
+  async getTransactions(userId: string): Promise<any[]> {
+    return this.transactionModel
+      .find({ userId })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async withdraw(userId: string, amount: number): Promise<any> {
+    const transaction = await this.transactionModel.create({
+      userId,
+      amount,
+      type: 'withdrawal',
+      description: 'Withdrawal request',
+      status: 'pending',
+    });
+    return {
+      message: 'Withdrawal request submitted successfully',
+      amount,
+      status: 'pending',
+      transaction,
+    };
+  }
+
   async getAuthToken(): Promise<string> {
     const response = await axios.post(
       'https://accept.paymob.com/api/auth/tokens',
@@ -25,7 +70,6 @@ export class PaymentsService {
     return response.data.token;
   }
 
-  // Step B: Create Order
   async createOrder(authToken: string, amountCents: number): Promise<number> {
     const response = await axios.post(
       'https://accept.paymob.com/api/ecommerce/orders',
@@ -40,7 +84,6 @@ export class PaymentsService {
     return response.data.id;
   }
 
-  // Step C: Get Payment Key
   async getPaymentKey(
     authToken: string,
     orderId: number,
@@ -62,10 +105,8 @@ export class PaymentsService {
     return response.data.token;
   }
 
-  // Full payment flow — returns iframe URL
   async initiatePayment(userId: string, amountEGP: number, userInfo: any): Promise<any> {
     const amountCents = amountEGP * 100;
-
     const billingData = {
       apartment: 'NA',
       email: userInfo.email || 'test@test.com',
@@ -82,39 +123,22 @@ export class PaymentsService {
       state: 'Cairo',
     };
 
-    // Step A
     const authToken = await this.getAuthToken();
-
-    // Step B
     const orderId = await this.createOrder(authToken, amountCents);
-
-    // Step C
-    const paymentKey = await this.getPaymentKey(
-      authToken,
-      orderId,
-      amountCents,
-      billingData,
-    );
+    const paymentKey = await this.getPaymentKey(authToken, orderId, amountCents, billingData);
 
     const iframeId = this.configService.get<string>('PAYMOB_IFRAME_ID');
     const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
 
-    return {
-      iframeUrl,
-      paymentKey,
-      orderId,
-    };
+    return { iframeUrl, paymentKey, orderId };
   }
 
-  // Callback from Paymob after payment
   async handleCallback(data: any): Promise<any> {
     const transactionData = data.obj;
     const success = transactionData?.success;
     const orderId = transactionData?.order?.id;
     const amount = transactionData?.amount_cents / 100;
-
     console.log(`Payment ${success ? 'SUCCESS' : 'FAILED'} for order ${orderId}, amount: ${amount} EGP`);
-
     return { received: true };
   }
 }
