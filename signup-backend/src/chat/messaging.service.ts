@@ -90,17 +90,26 @@ export class MessagingService {
   }
 
   async sendMessage(
-    senderId: string,
-    receiverId: string,
-    content: string,
-  ): Promise<MessageDocument> {
-    const message = new this.messageModel({
-      sender: senderId,
-      receiver: receiverId,
-      content,
-    });
-    return message.save();
-  }
+  senderId: string,
+  receiverId: string,
+  content: string,
+): Promise<any> {
+  const message = new this.messageModel({
+    sender: senderId,
+    receiver: receiverId,
+    content,
+  });
+  const saved = await message.save();
+  
+  // Populate sender info
+  const populated = await this.messageModel
+    .findById(saved._id)
+    .populate('sender', 'name photo')
+    .populate('receiver', 'name photo')
+    .exec();
+
+  return populated;
+}
 
   async markAsRead(userId: string, otherUserId: string): Promise<any> {
     await this.messageModel.updateMany(
