@@ -211,4 +211,15 @@ async uploadImage(
 getAgentStats(@CurrentUser() user: UserDocument) {
   return this.usersService.getAgentStats(String(user._id));
 }
+// GET /users/premium-status
+@Get('premium-status')
+@UseGuards(JwtAuthGuard)
+async getPremiumStatus(@CurrentUser() user: UserDocument) {
+  const fullUser = await this.usersService.findById(String(user._id));
+  return {
+    isPremium: fullUser?.isPremium || false,
+    premiumUntil: fullUser?.premiumUntil || null,
+    plan: fullUser?.premiumPlan || null,
+  };
+}
 }

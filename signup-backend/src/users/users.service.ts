@@ -24,9 +24,9 @@ export class UsersService{
     .exec();
 }
 
-    async findById(id: string): Promise<UserDocument | null>{
-        return this.userModel.findById(id).exec();
-    }
+    async findById(id: string): Promise<UserDocument | null> {
+  return this.userModel.findById(id).select('-password -verificationCode -verificationCodeExpires').exec();
+}
     
     async findByVerificationToken(token: string): Promise<UserDocument | null>{
         return this.userModel

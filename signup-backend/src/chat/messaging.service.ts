@@ -98,17 +98,26 @@ export class MessagingService {
     sender: senderId,
     receiver: receiverId,
     content,
+    isDelivered: true,
+    isRead: false,
   });
   const saved = await message.save();
   
-  // Populate sender info
   const populated = await this.messageModel
     .findById(saved._id)
-    .populate('sender', 'name photo')
-    .populate('receiver', 'name photo')
+    .populate('sender', 'name photo _id')
+    .populate('receiver', 'name photo _id')
     .exec();
 
-  return populated;
+  return {
+    _id: populated?._id,
+    content: populated?.content,
+    sender: populated?.sender,
+    receiver: populated?.receiver,
+    isRead: populated?.isRead,
+    isDelivered: true,
+    createdAt: (populated as any)?.createdAt,
+  };
 }
 
   async markAsRead(userId: string, otherUserId: string): Promise<any> {

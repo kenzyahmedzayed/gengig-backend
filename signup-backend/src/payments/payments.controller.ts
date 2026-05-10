@@ -2,7 +2,6 @@ import { Controller, Post, Get, Delete, Body, Param, UseGuards, HttpCode, HttpSt
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PaymentsService } from './payments.service';
-import { SaveCardDto } from './dto/save-card.dto';
 import type { UserDocument } from '../users/users.schema';
 
 @Controller('payments')
@@ -18,10 +17,10 @@ export class PaymentsController {
 
   // POST /payments/save-card
   @Post('save-card')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   saveCard(
     @CurrentUser() user: UserDocument,
-    @Body() dto: SaveCardDto,
+    @Body() dto: any,
   ) {
     return this.paymentsService.saveCard(String(user._id), dto);
   }
@@ -34,6 +33,13 @@ export class PaymentsController {
     @Param('id') cardId: string,
   ) {
     return this.paymentsService.deleteCard(String(user._id), cardId);
+  }
+
+  // DELETE /payments/cards (no id - fallback)
+  @Delete('cards')
+  @HttpCode(HttpStatus.OK)
+  deleteAllCards(@CurrentUser() user: UserDocument) {
+    return this.paymentsService.deleteAllCards(String(user._id));
   }
 
   // GET /payments/transactions
@@ -64,6 +70,29 @@ export class PaymentsController {
       body.amount,
       { name: user.name, email: user.email },
     );
+  }
+
+  // POST /payments/premium/initiate
+  @Post('premium/initiate')
+  @HttpCode(HttpStatus.OK)
+  async initiatePremium(
+    @CurrentUser() user: UserDocument,
+    @Body() body: { amount: number; billingCycle: string; planName: string },
+  ) {
+    return this.paymentsService.initiatePremiumPayment(
+      String(user._id),
+      body.amount,
+      body.billingCycle,
+      body.planName,
+      { name: user.name, email: user.email },
+    );
+  }
+
+  // POST /payments/premium/webhook
+  @Post('premium/webhook')
+  @HttpCode(HttpStatus.OK)
+  async premiumWebhook(@Body() data: any) {
+    return this.paymentsService.handlePremiumCallback(data);
   }
 
   // POST /payments/callback

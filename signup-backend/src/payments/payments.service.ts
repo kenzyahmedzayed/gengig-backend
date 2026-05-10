@@ -4,7 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import axios from 'axios';
 import { PaymentCard, PaymentCardDocument, Transaction, TransactionDocument } from './payment.schema';
-import { SaveCardDto } from './dto/save-card.dto';
+import { User, UserDocument } from '../users/users.schema';
 
 @Injectable()
 export class PaymentsService {
@@ -17,57 +17,87 @@ export class PaymentsService {
     private readonly cardModel: Model<PaymentCardDocument>,
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<TransactionDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
   ) {
     this.apiKey = this.configService.get<string>('PAYMOB_API_KEY') || '';
     this.integrationId = this.configService.get<string>('PAYMOB_INTEGRATION_ID') || '';
   }
 
   async saveCard(userId: string, dto: any): Promise<any> {
-  const cardHolderName = dto.cardHolderName || dto.nameOnCard || dto.name || 'Card Holder';
-  const cardNumber = dto.cardNumber || '';
-  const lastFourDigits = dto.lastFourDigits || 
-                         (cardNumber ? cardNumber.replace(/\s/g, '').slice(-4) : '0000');
-  
-  let expiryMonth = dto.expiryMonth || '';
-  let expiryYear = dto.expiryYear || '';
-  
-  if (dto.expiryDate && dto.expiryDate.includes('/')) {
-    const parts = dto.expiryDate.split('/');
-    expiryMonth = parts[0]?.trim() || '01';
-    expiryYear = parts[1]?.trim() || '26';
+    const cardHolderName = dto.cardHolderName || dto.nameOnCard || dto.name || 'Card Holder';
+    const cardNumber = dto.cardNumber || '';
+    const lastFourDigits = dto.lastFourDigits ||
+      (cardNumber ? cardNumber.replace(/\s/g, '').slice(-4) : '0000');
+
+    let expiryMonth = dto.expiryMonth || '';
+    let expiryYear = dto.expiryYear || '';
+
+    if (dto.expiryDate && dto.expiryDate.includes('/')) {
+      const parts = dto.expiryDate.split('/');
+      expiryMonth = parts[0]?.trim() || '01';
+      expiryYear = parts[1]?.trim() || '26';
+    }
+
+    if (!expiryMonth) expiryMonth = '01';
+    if (!expiryYear) expiryYear = '26';
+
+    // Save to PaymentCard collection
+    const card = await this.cardModel.create({
+      userId,
+      cardHolderName,
+      lastFourDigits,
+      expiryMonth,
+      expiryYear,
+      cardType: dto.cardType || 'Visa',
+      isDefault: dto.isDefault || false,
+    });
+
+    // Also save masked card to User model
+    await this.userModel.findByIdAndUpdate(userId, {
+      savedCard: {
+        cardType: dto.cardType || 'Visa',
+        name: cardHolderName,
+        maskedNumber: `**** **** **** ${lastFourDigits}`,
+        expiry: `${expiryMonth}/${expiryYear}`,
+      }
+    });
+
+    return card;
   }
 
-  // Final fallbacks
-  if (!expiryMonth) expiryMonth = '01';
-  if (!expiryYear) expiryYear = '26';
-
-  const card = await this.cardModel.create({
-    userId,
-    cardHolderName,
-    lastFourDigits,
-    expiryMonth,
-    expiryYear,
-    cardType: dto.cardType || 'Visa',
-    isDefault: dto.isDefault || false,
-  });
-
-  return card;
-}
-
-  async getCards(userId: string): Promise<any[]> {
-    return this.cardModel.find({ userId }).exec();
+  async getCards(userId: string): Promise<any> {
+    const cards = await this.cardModel.find({ userId }).exec();
+    if (!cards || cards.length === 0) {
+      // Try to get from user model
+      const user = await this.userModel.findById(userId).select('savedCard').exec();
+      if (user?.savedCard) {
+        return [user.savedCard];
+      }
+      return [];
+    }
+    return cards;
   }
 
   async deleteCard(userId: string, cardId: string): Promise<any> {
     await this.cardModel.findOneAndDelete({ _id: cardId, userId });
-    return { message: 'Card deleted successfully' };
+    // Also clear from user model
+    await this.userModel.findByIdAndUpdate(userId, { savedCard: null });
+    return { success: true, message: 'Card removed' };
+  }
+
+  async deleteAllCards(userId: string): Promise<any> {
+    await this.cardModel.deleteMany({ userId });
+    await this.userModel.findByIdAndUpdate(userId, { savedCard: null });
+    return { success: true, message: 'Cards removed' };
   }
 
   async getTransactions(userId: string): Promise<any[]> {
-    return this.transactionModel
+    const transactions = await this.transactionModel
       .find({ userId })
       .sort({ createdAt: -1 })
       .exec();
+    return transactions || [];
   }
 
   async withdraw(userId: string, amount: number): Promise<any> {
@@ -132,37 +162,66 @@ export class PaymentsService {
   async initiatePayment(userId: string, amountEGP: number, userInfo: any): Promise<any> {
     const amountCents = amountEGP * 100;
     const billingData = {
-      apartment: 'NA',
-      email: userInfo.email || 'test@test.com',
-      floor: 'NA',
-      first_name: userInfo.name?.split(' ')[0] || 'Test',
+      apartment: 'NA', email: userInfo.email || 'test@test.com',
+      floor: 'NA', first_name: userInfo.name?.split(' ')[0] || 'Test',
       last_name: userInfo.name?.split(' ')[1] || 'User',
-      street: 'NA',
-      building: 'NA',
-      phone_number: userInfo.phone || '+201000000000',
-      shipping_method: 'NA',
-      postal_code: 'NA',
-      city: 'Cairo',
-      country: 'EG',
-      state: 'Cairo',
+      street: 'NA', building: 'NA', phone_number: '+201000000000',
+      shipping_method: 'NA', postal_code: 'NA',
+      city: 'Cairo', country: 'EG', state: 'Cairo',
     };
-
     const authToken = await this.getAuthToken();
     const orderId = await this.createOrder(authToken, amountCents);
     const paymentKey = await this.getPaymentKey(authToken, orderId, amountCents, billingData);
-
     const iframeId = this.configService.get<string>('PAYMOB_IFRAME_ID');
-    const iframeUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`;
+    return {
+      iframeUrl: `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${paymentKey}`,
+      paymentKey,
+      orderId,
+    };
+  }
 
-    return { iframeUrl, paymentKey, orderId };
+  async initiatePremiumPayment(
+    userId: string,
+    amountEGP: number,
+    billingCycle: string,
+    planName: string,
+    userInfo: any,
+  ): Promise<any> {
+    const result = await this.initiatePayment(userId, amountEGP, userInfo);
+    return {
+      ...result,
+      billingCycle,
+      planName,
+    };
+  }
+
+  async handlePremiumCallback(data: any): Promise<any> {
+    try {
+      const success = data?.obj?.success || data?.success;
+      const userId = data?.obj?.order?.merchant_order_id || data?.userId;
+
+      if (success && userId) {
+        const billingCycle = data?.billingCycle || 'monthly';
+        const premiumUntil = billingCycle === 'yearly'
+          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+        await this.userModel.findByIdAndUpdate(userId, {
+          isPremium: true,
+          premiumUntil,
+          premiumPlan: billingCycle,
+        });
+      }
+    } catch (err) {
+      console.error('Premium callback error:', err);
+    }
+    return { received: true };
   }
 
   async handleCallback(data: any): Promise<any> {
-    const transactionData = data.obj;
-    const success = transactionData?.success;
-    const orderId = transactionData?.order?.id;
-    const amount = transactionData?.amount_cents / 100;
-    console.log(`Payment ${success ? 'SUCCESS' : 'FAILED'} for order ${orderId}, amount: ${amount} EGP`);
+    const success = data?.obj?.success;
+    const orderId = data?.obj?.order?.id;
+    console.log(`Payment ${success ? 'SUCCESS' : 'FAILED'} for order ${orderId}`);
     return { received: true };
   }
 }
