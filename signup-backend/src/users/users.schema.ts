@@ -75,6 +75,22 @@ portfolio?: Array<{
   category: string;
   img: string;
 }>;
+@Prop({ default: false })
+isPremium?: boolean;
+
+@Prop()
+premiumUntil?: Date;
+
+@Prop()
+premiumPlan?: string;
+
+@Prop({ type: Object })
+savedCard?: {
+  cardType: string;
+  name: string;
+  maskedNumber: string;
+  expiry: string;
+};
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
