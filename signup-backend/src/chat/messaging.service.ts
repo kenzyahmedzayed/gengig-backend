@@ -102,7 +102,7 @@ export class MessagingService {
     isRead: false,
   });
   const saved = await message.save();
-  
+
   const populated = await this.messageModel
     .findById(saved._id)
     .populate('sender', 'name photo _id')
@@ -114,19 +114,21 @@ export class MessagingService {
     content: populated?.content,
     sender: populated?.sender,
     receiver: populated?.receiver,
-    isRead: populated?.isRead,
+    isRead: false,
     isDelivered: true,
     createdAt: (populated as any)?.createdAt,
   };
 }
 
-  async markAsRead(userId: string, otherUserId: string): Promise<any> {
-    await this.messageModel.updateMany(
-      { sender: otherUserId, receiver: userId, isRead: false },
-      { isRead: true },
-    );
-    return { message: 'Messages marked as read' };
-  }
+async markAsRead(userId: string, otherUserId: string): Promise<any> {
+  await this.messageModel.updateMany(
+    { sender: otherUserId, receiver: userId, isRead: false },
+    { isRead: true, isDelivered: true },
+  );
+  return { message: 'Messages marked as read' };
+}
+
+  
   async createConversation(userId: string, otherUserId: string): Promise<any> {
   const existing = await this.messageModel.findOne({
     $or: [

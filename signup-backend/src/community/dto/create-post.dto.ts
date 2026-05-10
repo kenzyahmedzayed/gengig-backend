@@ -4,7 +4,7 @@ import { IsString, IsOptional, IsArray, MinLength } from 'class-validator';
 export class CreatePostDto {
   @IsString()
   @MinLength(5, { message: 'Post content must be at least 5 characters' })
-  content: string;
+  content!: string;
 
   @IsOptional()
   @IsString()
