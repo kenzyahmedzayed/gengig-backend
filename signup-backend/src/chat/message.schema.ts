@@ -17,8 +17,8 @@ export class Message {
   @Prop({ default: false })
   isRead!: boolean;
 
-@Prop({ default: false })
-isDelivered!: boolean;
+  @Prop({ default: true })
+  isDelivered!: boolean;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

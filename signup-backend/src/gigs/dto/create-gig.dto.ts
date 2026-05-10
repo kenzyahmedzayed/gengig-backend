@@ -3,17 +3,17 @@ import { IsString, IsArray, IsOptional, MinLength } from 'class-validator';
 export class CreateGigDto {
   @IsString()
   @MinLength(5)
-  title: string;
+  title!: string;
 
   @IsString()
   @MinLength(20)
-  description: string;
+  description!: string;
 
   @IsString()
-  category: string;
+  category!: string;
 
   @IsString()
-  budget: string;
+  budget!: string;
 
   @IsOptional()
   @IsString()

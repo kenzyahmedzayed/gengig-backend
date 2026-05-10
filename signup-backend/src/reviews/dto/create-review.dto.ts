@@ -2,17 +2,17 @@ import { IsString, IsNumber, IsMongoId, Min, Max, MinLength } from 'class-valida
 
 export class CreateReviewDto {
   @IsMongoId()
-  teenlancerId: string;
+  teenlancerId!: string;
 
   @IsMongoId()
-  gigId: string;
+  gigId!: string;
 
   @IsNumber()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating!: number;
 
   @IsString()
   @MinLength(10, { message: 'Comment must be at least 10 characters' })
-  comment: string;
+  comment!: string;
 }

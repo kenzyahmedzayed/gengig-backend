@@ -1,23 +1,13 @@
-import {
-  WebSocketGateway,
-  WebSocketServer,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer, SubscribeMessage, MessageBody, ConnectedSocket, OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagingService } from './messaging.service';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
-    credentials: false,
+    origin: ['http://localhost:5173', 'http://localhost:3000', '*'],
+    credentials: true,
   },
   transports: ['websocket', 'polling'],
-  namespace: '/',
 })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
@@ -29,6 +19,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
   afterInit(server: Server) {
     console.log('WebSocket server initialized ✅');
+    // Auth middleware
+    server.use((socket: any, next) => {
+      try {
+        const token = socket.handshake.auth?.token ||
+                      socket.handshake.headers?.authorization?.replace('Bearer ', '');
+        // Allow connection even without token
+        next();
+      } catch (err) {
+        next(new Error('Authentication failed'));
+      }
+    });
   }
 
   handleConnection(client: Socket) {
@@ -74,13 +75,11 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       data.content,
     );
 
-    // Send to receiver
     this.server.to(data.receiverId).emit('receive_message', {
       ...message,
       isMine: false,
     });
 
-    // Confirm to sender
     client.emit('message_sent', {
       ...message,
       isMine: true,
@@ -118,8 +117,8 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     });
   }
 
-  // Method to emit from other services
   emitToUser(userId: string, event: string, data: any) {
+    if (!this.server) return;
     this.server.to(userId).emit(event, data);
   }
 }
