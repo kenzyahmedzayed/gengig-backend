@@ -155,12 +155,33 @@ async getRelated(gigId: string): Promise<GigDocument[]> {
 }
 
 async saveGig(gigId: string, userId: string): Promise<any> {
-  return { message: 'Gig saved successfully', gigId, userId };
+  const gig = await this.gigModel.findById(gigId);
+  if (!gig) throw new NotFoundException('Gig not found');
+
+  const savedBy = gig.savedBy || [];
+  const alreadySaved = savedBy.some(id => id.toString() === userId);
+
+  if (alreadySaved) {
+    gig.savedBy = savedBy.filter(id => id.toString() !== userId) as any;
+  } else {
+    (gig.savedBy as any[]).push(userId);
+  }
+
+  await gig.save();
+  return { saved: !alreadySaved, gigId };
 }
 async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
   const gig = await this.gigModel.findOne({ _id: gigId, postedBy: agentId });
   if (!gig) throw new NotFoundException('Gig not found');
   gig.status = 'completed';
   return gig.save();
+}
+async getSavedGigs(userId: string): Promise<any[]> {
+  const gigs = await this.gigModel
+    .find({ savedBy: userId })
+    .populate('postedBy', 'name photo company')
+    .sort({ createdAt: -1 })
+    .exec();
+  return gigs;
 }
 }

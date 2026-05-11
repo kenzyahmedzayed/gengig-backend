@@ -47,6 +47,8 @@ status?: string;
   isFeatured!: boolean;
   @Prop({ type: Types.ObjectId, ref: 'User' })
 acceptedTeenlancer?: Types.ObjectId;
+@Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+savedBy?: Types.ObjectId[];
 }
 
 export const GigSchema = SchemaFactory.createForClass(Gig);

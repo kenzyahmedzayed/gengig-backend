@@ -8,6 +8,7 @@ import { RegisterDto } from './dto/register.dto';
 import type { UserDocument } from '../users/users.schema';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forget-password.dto';
+import { UserRole } from '../users/users.schema';
 
 @Injectable()
 export class AuthService {
@@ -255,5 +256,38 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
 
 async generateAccessTokenPublic(user: UserDocument): Promise<string> {
   return this.generateAccessToken(user);
+}
+async googleLogin(email: string, name: string, photo: string) {
+  let user = await this.usersService.findByEmail(email);
+  
+  if (!user) {
+    user = await this.usersService.create({
+      name,
+      email,
+      password: Math.random().toString(36).slice(-16),
+      photo,
+      isEmailVerified: true,
+      role: UserRole.TEENLANCER,
+    });
+  }
+
+  const token = await this.generateAccessTokenPublic(user);
+  
+  return {
+    token,
+    userId: String(user._id),
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    photo: user.photo || '',
+    user: {
+      id: String(user._id),
+      _id: String(user._id),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      photo: user.photo || '',
+    }
+  };
 }
 }
