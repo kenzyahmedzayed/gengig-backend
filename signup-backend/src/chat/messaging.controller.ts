@@ -39,33 +39,35 @@ export class MessagingController {
   }
 
   @Post('messages/:userId')
-  @HttpCode(HttpStatus.CREATED)
-  async sendMessage(
-    @CurrentUser() user: UserDocument,
-    @Param('userId') receiverId: string,
-    @Body() dto: SendMessageDto,
-  ) {
-    const message = await this.messagingService.sendMessage(
-      String(user._id),
-      receiverId,
-      dto.content,
-    );
+@HttpCode(HttpStatus.CREATED)
+async sendMessage(
+  @CurrentUser() user: UserDocument,
+  @Param('userId') receiverId: string,
+  @Body() dto: SendMessageDto,
+) {
+  const message = await this.messagingService.sendMessage(
+    String(user._id),
+    receiverId,
+    dto.content,
+  );
 
-    // Emit real-time event to receiver
-    this.chatGateway.emitToUser(receiverId, 'receive_message', {
-      ...message,
-      isMine: false,
-    });
+  // Emit real-time message to receiver
+  this.chatGateway.emitToUser(receiverId, 'receive_message', {
+    ...message,
+    isMine: false,
+  });
 
-    // Emit notification to receiver
-    this.chatGateway.emitToUser(receiverId, 'notification', {
-      type: 'new_message',
-      message: dto.content,
-    });
+  // Emit real-time notification to receiver
+  this.chatGateway.emitToUser(receiverId, 'new_notification', {
+    type: 'new_message',
+    title: 'New Message 💬',
+    message: `${user.name} sent you a message`,
+    from: user.name,
+    photo: user.photo || '',
+  });
 
-    return message;
-  }
-
+  return message;
+}
   @Put('messages/:userId/read')
   @HttpCode(HttpStatus.OK)
   markAsRead(
