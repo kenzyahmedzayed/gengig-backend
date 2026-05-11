@@ -9,6 +9,9 @@ export enum NotificationType {
   APPLICATION_REJECTED = 'application_rejected',
   NEW_REVIEW = 'new_review',
   GENERAL = 'general',
+  NEW_APPLICATION = 'new_application',
+  NEW_MESSAGE = 'new_message',
+  PAYMENT = 'payment',
 }
 
 @Schema({ timestamps: true })
@@ -22,8 +25,11 @@ export class Notification {
   @Prop({ required: true })
   message!: string;
 
-  @Prop({ enum: NotificationType, default: NotificationType.GENERAL })
-  type!: NotificationType;
+  @Prop({ 
+    enum: Object.values(NotificationType), 
+    default: NotificationType.GENERAL 
+  })
+  type!: string;
 
   @Prop({ default: false })
   isRead!: boolean;

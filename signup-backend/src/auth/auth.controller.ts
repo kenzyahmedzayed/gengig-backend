@@ -132,4 +132,8 @@ async googleCallback(
   const frontendUrl = `http://localhost:5173/auth/google/success?token=${token}&role=${user.role}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
   return res.redirect(frontendUrl);
 }
+@Post('google/supabase')
+async googleSupabase(@Body() body: { email: string; name: string; photo: string }) {
+  return this.authService.googleLogin(body.email, body.name, body.photo);
+}
 }

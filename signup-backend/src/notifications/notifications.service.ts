@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Notification, NotificationDocument } from './notification.schema';
+import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    private readonly chatGateway: ChatGateway,
   ) {}
 
   async findAll(userId: string): Promise<NotificationDocument[]> {
@@ -60,12 +62,28 @@ export class NotificationsService {
     type?: string,
     link?: string,
   ): Promise<NotificationDocument> {
-    return this.notificationModel.create({
+    const notification = await this.notificationModel.create({
       userId,
       title,
       message,
-      type,
+      type: type || 'general',
       link,
     });
+
+    // Emit real-time notification to user
+    try {
+      this.chatGateway.emitToUser(String(userId), 'new_notification', {
+        _id: notification._id,
+        title,
+        message,
+        type: type || 'general',
+        isRead: false,
+        createdAt: (notification as any).createdAt,
+      });
+    } catch (err) {
+      console.error('Failed to emit notification:', err);
+    }
+
+    return notification;
   }
 }

@@ -148,4 +148,10 @@ async completeGig(
 ) {
   return this.gigsService.completeGig(id, String(user._id));
 }
+// GET /teenlancer/saved-gigs  
+@Get('teenlancer/saved-gigs')
+@UseGuards(JwtAuthGuard)
+getSavedGigs(@CurrentUser() user: UserDocument) {
+  return this.gigsService.getSavedGigs(String(user._id));
+}
 }
