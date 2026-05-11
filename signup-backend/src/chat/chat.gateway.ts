@@ -63,29 +63,37 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   @SubscribeMessage('send_message')
-  async handleMessage(
-    @MessageBody() data: { senderId: string; receiverId: string; content: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    if (!data?.senderId || !data?.receiverId || !data?.content) return;
+async handleMessage(
+  @MessageBody() data: { senderId: string; receiverId: string; content: string },
+  @ConnectedSocket() client: Socket,
+) {
+  if (!data?.senderId || !data?.receiverId || !data?.content) return;
 
-    const message = await this.messagingService.sendMessage(
-      data.senderId,
-      data.receiverId,
-      data.content,
-    );
+  const message = await this.messagingService.sendMessage(
+    data.senderId,
+    data.receiverId,
+    data.content,
+  );
 
-    this.server.to(data.receiverId).emit('receive_message', {
-      ...message,
-      isMine: false,
-    });
+  // Send to receiver
+  this.server.to(data.receiverId).emit('receive_message', {
+    ...message,
+    isMine: false,
+  });
 
-    client.emit('message_sent', {
-      ...message,
-      isMine: true,
-    });
-  }
+  // Send notification to receiver
+  this.server.to(data.receiverId).emit('new_notification', {
+    type: 'new_message',
+    title: 'New Message 💬',
+    message: `New message received`,
+  });
 
+  // Confirm to sender
+  client.emit('message_sent', {
+    ...message,
+    isMine: true,
+  });
+}
   @SubscribeMessage('mark_read')
   async handleMarkRead(
     @MessageBody() data: { userId: string; otherUserId: string },

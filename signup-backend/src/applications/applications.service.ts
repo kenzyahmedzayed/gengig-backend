@@ -18,27 +18,42 @@ export class ApplicationsService {
   ) {}
 
   async apply(
-    teenlancerId: string,
-    gigId: string,
-    dto: CreateApplicationDto,
-  ): Promise<ApplicationDocument> {
-    const existing = await this.applicationModel.findOne({
-      appliedBy: teenlancerId,
-      gig: gigId,
-    });
+  teenlancerId: string,
+  gigId: string,
+  dto: CreateApplicationDto,
+): Promise<ApplicationDocument> {
+  const existing = await this.applicationModel.findOne({
+    appliedBy: teenlancerId,
+    gig: gigId,
+  });
 
-    if (existing) {
-      throw new ConflictException('You have already applied to this gig');
-    }
-
-    const application = new this.applicationModel({
-      appliedBy: teenlancerId,
-      gig: gigId,
-      ...dto,
-    });
-
-    return application.save();
+  if (existing) {
+    throw new ConflictException('You have already applied to this gig');
   }
+
+  const application = new this.applicationModel({
+    appliedBy: teenlancerId,
+    gig: gigId,
+    ...dto,
+  });
+
+  await application.save();
+
+  // Get gig to find agent
+  const gig = await this.gigModel.findById(gigId).exec();
+  if (gig) {
+    // Notify agent
+    await this.notificationModel.create({
+      userId: gig.postedBy,
+      type: 'new_application',
+      title: 'New Application! 🎉',
+      message: `Someone applied to your gig "${gig.title}"`,
+      isRead: false,
+    });
+  }
+
+  return application;
+}
 
   async findByAgent(agentId: string): Promise<any[]> {
   const apps = await this.applicationModel
