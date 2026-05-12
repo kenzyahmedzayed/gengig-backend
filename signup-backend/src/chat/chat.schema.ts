@@ -20,5 +20,4 @@ export class ChatMessage {
   @Prop({ required: true, enum: ['teenlancer', 'agent'] })
   userType!: string;
 }
-
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);

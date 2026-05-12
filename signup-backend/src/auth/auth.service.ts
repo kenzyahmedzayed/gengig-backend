@@ -19,15 +19,15 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const existing = await this.usersService.findByEmail(dto.email);
-    if (existing) {
-      throw new ConflictException('An account with this email already exists');
-    }
+async register(dto: RegisterDto) {
+  const existing = await this.usersService.findByEmail(dto.email);
+  if (existing) {
+    throw new ConflictException('An account with this email already exists');
+  }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const hashedPassword = await bcrypt.hash(dto.password, 12);
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const verificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
   await this.usersService.create({
   name: dto.name,
@@ -38,19 +38,15 @@ export class AuthService {
   verificationCode: verificationCode,
   verificationCodeExpires: verificationExpires,
 });
-
-
-    
-
     this.mailService.sendVerificationEmail(dto.email, dto.name, verificationCode)
       .catch(() => {});
 
     return {
       message: 'Registration successful! Please check your email to verify your account.',
     };
-  }
+}
 
-  async verifyEmail(email: string, code: string) {
+async verifyEmail(email: string, code: string) {
   const user = await this.usersService.findByEmailWithVerification(email);
 
   if (!user) {
@@ -68,7 +64,6 @@ export class AuthService {
   if (!user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
   throw new BadRequestException('Verification code expired');
 }
-
   await this.usersService.updateById(String(user._id), {
     isEmailVerified: true,
     verificationCode: undefined,
@@ -79,7 +74,7 @@ export class AuthService {
   return { access_token };
 }
 
- async resendVerification(email: string) {
+async resendVerification(email: string) {
   const user = await this.usersService.findByEmail(email);
 
   if (!user) {
@@ -105,13 +100,13 @@ export class AuthService {
   return { message: 'Verification code sent.' };
 }
 
-  async getProfile(userId: string) {
+async getProfile(userId: string) {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     return user;
-  }
+}
 
-  async verifyResetCode(email: string, code: string) {
+async verifyResetCode(email: string, code: string) {
   const user = await this.usersService.findByEmailWithVerification(email);
 
   if (!user) {
@@ -146,6 +141,7 @@ async resetPassword(email: string, newPassword: string) {
 
   return { message: 'Password reset successfully' };
 }
+
 async changePassword(userId: string, currentPassword: string, newPassword: string) {
   const user = await this.usersService.findById(userId);
 
@@ -169,7 +165,8 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
 
   return { message: 'Password changed successfully' };
 }
-  private async generateAccessToken(user: UserDocument): Promise<string> {
+
+private async generateAccessToken(user: UserDocument): Promise<string> {
   return this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
@@ -179,7 +176,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   );
 }
 
-  async login(loginDto: LoginDto) {
+async login(loginDto: LoginDto) {
   const { email, password } = loginDto;
   const user = await this.usersService.findByEmailWithPassword(email);
   if (!user) {
@@ -189,10 +186,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   if (!isPasswordValid) {
     throw new UnauthorizedException('Invalid email or password');
   }
-
-  // Fetch full user data including photo
   const fullUser = await this.usersService.findById(String(user._id));
-
   const token = await this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
@@ -200,7 +194,6 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
       expiresIn: '7d',
     },
   );
-
   return {
     message: 'Login Successful',
     token,
@@ -227,7 +220,7 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   };
 }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
   const { email } = forgotPasswordDto;
 
   const user = await this.usersService.findByEmail(email);
@@ -250,13 +243,14 @@ async changePassword(userId: string, currentPassword: string, newPassword: strin
   return { message: 'If that email is registered, a reset code has been sent.' };
 }
 
-  async logout() {
+async logout() {
   return { message: 'Logged out successfully' };
 }
 
 async generateAccessTokenPublic(user: UserDocument): Promise<string> {
   return this.generateAccessToken(user);
 }
+
 async googleLogin(email: string, name: string, photo: string) {
   let user = await this.usersService.findByEmail(email);
   

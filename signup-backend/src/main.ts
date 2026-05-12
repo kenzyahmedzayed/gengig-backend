@@ -29,10 +29,8 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Configure Socket.io adapter with CORS
   app.useWebSocketAdapter(new IoAdapter(app));
 
-  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Gengig API')
     .setDescription('Gengig — Freelancing Platform for Teenagers')
@@ -57,5 +55,4 @@ async function bootstrap() {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
-
 bootstrap();

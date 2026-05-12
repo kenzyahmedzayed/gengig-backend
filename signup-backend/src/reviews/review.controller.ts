@@ -9,43 +9,44 @@ import type { UserDocument } from '../users/users.schema';
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
-  @Post('reviews')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
+@Post('reviews')
+@UseGuards(JwtAuthGuard)
+@HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserDocument,
     @Body() dto: CreateReviewDto,
   ) {
     return this.reviewsService.create(String(user._id), user.role, dto);
-  }
+}
 
-  @Get('teenlancer/reviews')
-  @UseGuards(JwtAuthGuard)
+@Get('teenlancer/reviews')
+@UseGuards(JwtAuthGuard)
   getMyReviews(@CurrentUser() user: UserDocument) {
     return this.reviewsService.getTeenlancerReviews(String(user._id));
-  }
+}
 
-  @Get('teenlancer/reviews/:id')
+@Get('teenlancer/reviews/:id')
   getTeenlancerReviews(@Param('id') id: string) {
     return this.reviewsService.getTeenlancerReviews(id);
-  }
+}
 
-  @Get('agent/reviews')
-  @UseGuards(JwtAuthGuard)
+@Get('agent/reviews')
+@UseGuards(JwtAuthGuard)
   getAgentReviews(@CurrentUser() user: UserDocument) {
     return this.reviewsService.getAgentReviews(String(user._id));
-  }
+}
 
-  @Get('agent/stats')
-  @UseGuards(JwtAuthGuard)
+@Get('agent/stats')
+@UseGuards(JwtAuthGuard)
   getAgentStats(@CurrentUser() user: UserDocument) {
     return this.reviewsService.getAgentStats(String(user._id));
-  }
+}
 
-  @Get('teenlancer/rating/:id')
+@Get('teenlancer/rating/:id')
   getTeenlancerRating(@Param('id') id: string) {
     return this.reviewsService.getTeenlancerRating(id);
-  }
+}
+
 @Get('platform/stats')
 getPlatformStats() {
   return this.reviewsService.getPlatformStats();

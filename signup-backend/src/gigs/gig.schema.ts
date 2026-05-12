@@ -38,17 +38,18 @@ export class Gig {
   requirements!: string[];
 
   @Prop({ default: 'open', enum: ['open', 'active', 'completed', 'draft'] })
-status?: string;
+  status?: string;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   postedBy!: Types.ObjectId;
 
   @Prop({ default: false })
   isFeatured!: boolean;
+  
   @Prop({ type: Types.ObjectId, ref: 'User' })
-acceptedTeenlancer?: Types.ObjectId;
-@Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
-savedBy?: Types.ObjectId[];
-}
+  acceptedTeenlancer?: Types.ObjectId;
 
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+  savedBy?: Types.ObjectId[];
+}
 export const GigSchema = SchemaFactory.createForClass(Gig);

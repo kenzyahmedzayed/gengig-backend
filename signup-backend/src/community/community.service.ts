@@ -10,7 +10,7 @@ export class CommunityService {
     private readonly postModel: Model<CommunityPostDocument>,
   ) {}
 
-  async findAll(): Promise<any[]> {
+async findAll(): Promise<any[]> {
     const posts = await this.postModel
       .find()
       .populate('author', 'name photo role')
@@ -46,9 +46,9 @@ export class CommunityService {
           role: (post.author as any).role || 'teenlancer',
         },
       }));
-  }
+}
 
-  async create(userId: string, role: string, data: any): Promise<any> {
+async create(userId: string, role: string, data: any): Promise<any> {
   let tags = [];
   if (data.tags) {
     if (Array.isArray(data.tags)) {
@@ -70,7 +70,7 @@ export class CommunityService {
   return post.populate('author', 'name photo role');
 }
 
-  async likePost(postId: string, userId: string): Promise<any> {
+async likePost(postId: string, userId: string): Promise<any> {
     if (!postId || postId === 'undefined') {
       throw new BadRequestException('Invalid post ID');
     }
@@ -87,24 +87,20 @@ export class CommunityService {
     } else {
       post.likes.push(userId as any);
     }
-
     await post.save();
-
     return {
       _id: post._id,
       likesCount: post.likes.length,
       likes: post.likes,
       isLiked: !alreadyLiked,
     };
-  }
+}
 
-  async addComment(postId: string, userId: string, role: string, dto: any): Promise<any> {
+async addComment(postId: string, userId: string, role: string, dto: any): Promise<any> {
   if (!postId || postId === 'undefined') {
     throw new BadRequestException('Invalid post ID');
   }
-
   const content = dto.content || dto.text || dto.comment || '';
-
   const post = await this.postModel
     .findByIdAndUpdate(
       postId,
@@ -139,7 +135,8 @@ export class CommunityService {
     })),
   };
 }
-  async getComments(postId: string): Promise<any> {
+  
+async getComments(postId: string): Promise<any> {
     const post = await this.postModel
       .findById(postId)
       .populate('comments.author', 'name photo')
@@ -157,9 +154,9 @@ export class CommunityService {
       },
       createdAt: (c as any).createdAt,
     }));
-  }
+}
 
-  async getActiveMembers() {
+async getActiveMembers() {
     const members = await this.postModel.aggregate([
       { $group: { _id: '$author', postCount: { $sum: 1 } } },
       { $sort: { postCount: -1 } },
@@ -182,11 +179,10 @@ export class CommunityService {
         },
       },
     ]);
-
     return members.filter(m => m.name && m.id);
-  }
+}
 
-  async getTrendingTags(): Promise<any[]> {
+async getTrendingTags(): Promise<any[]> {
     const posts = await this.postModel.find().select('tags').exec();
     const tagCount: Record<string, number> = {};
 
@@ -199,10 +195,46 @@ export class CommunityService {
         }
       }
     }
-
     return Object.entries(tagCount)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([tag, count]) => ({ tag, count }));
-  }
+}
+  
+async findOne(postId: string): Promise<any> {
+  const post = await this.postModel
+    .findById(postId)
+    .populate('author', 'name photo role')
+    .populate('comments.author', 'name photo')
+    .exec();
+
+  if (!post) throw new NotFoundException('Post not found');
+
+  return {
+    _id: post._id,
+    content: post.content,
+    tags: Array.isArray(post.tags) ? post.tags.filter(t => t && t !== '[]') : [],
+    image: post.image,
+    likes: post.likes || [],
+    likesCount: (post.likes || []).length,
+    comments: (post.comments || []).map(c => ({
+      _id: (c as any)._id,
+      content: c.content,
+      author: {
+        _id: (c.author as any)?._id,
+        name: (c.author as any)?.name || 'Unknown',
+        photo: (c.author as any)?.photo || '',
+      },
+      createdAt: (c as any).createdAt,
+    })),
+    commentsCount: (post.comments || []).length,
+    createdAt: (post as any).createdAt,
+    user: {
+      id: String((post.author as any)._id),
+      name: (post.author as any).name || 'Unknown',
+      photo: (post.author as any).photo || '',
+      role: (post.author as any).role || 'teenlancer',
+    },
+  };
+}
 }

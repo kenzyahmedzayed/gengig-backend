@@ -12,40 +12,54 @@ export class NotificationsService {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  async findAll(userId: string): Promise<NotificationDocument[]> {
-    return this.notificationModel
+async findAll(userId: string): Promise<any[]> {
+    const notifications = await this.notificationModel
       .find({ userId })
       .sort({ createdAt: -1 })
       .exec();
-  }
 
-  async getUnreadCount(userId: string): Promise<any> {
+    return notifications.map(n => ({
+      _id: n._id,
+      title: n.title,
+      message: n.message,
+      type: n.type,
+      isRead: n.isRead === true,
+      link: n.link,
+      createdAt: (n as any).createdAt,
+    }));
+}
+
+async getUnreadCount(userId: string): Promise<any> {
     const count = await this.notificationModel.countDocuments({
       userId,
       isRead: false,
     });
     return { count };
-  }
+}
 
-  async markAsRead(id: string, userId: string): Promise<NotificationDocument> {
-    const notification = await this.notificationModel.findOne({
-      _id: id,
-      userId,
-    });
-    if (!notification) throw new NotFoundException('Notification not found');
-    notification.isRead = true;
-    return notification.save();
-  }
+async markAsRead(id: string, userId: string): Promise<any> {
+    try {
+      await this.notificationModel.findByIdAndUpdate(
+        id,
+        { $set: { isRead: true } },
+        { returnDocument: 'after' }
+      );
+      return { success: true };
+    } catch (err: any) {
+      console.error('markAsRead error:', err.message);
+      return { success: false };
+    }
+}
 
-  async markAllAsRead(userId: string): Promise<any> {
+async markAllAsRead(userId: string): Promise<any> {
     await this.notificationModel.updateMany(
-      { userId, isRead: false },
-      { isRead: true },
+      { userId: userId, isRead: false },
+      { $set: { isRead: true } }
     );
-    return { message: 'All notifications marked as read' };
-  }
+    return { message: 'All notifications marked as read', success: true };
+}
 
-  async delete(id: string, userId: string): Promise<any> {
+async delete(id: string, userId: string): Promise<any> {
     const notification = await this.notificationModel.findOne({
       _id: id,
       userId,
@@ -53,9 +67,9 @@ export class NotificationsService {
     if (!notification) throw new NotFoundException('Notification not found');
     await this.notificationModel.findByIdAndDelete(id);
     return { message: 'Notification deleted successfully' };
-  }
+}
 
-  async create(
+async create(
     userId: string,
     title: string,
     message: string,
@@ -70,7 +84,6 @@ export class NotificationsService {
       link,
     });
 
-    // Emit real-time notification to user
     try {
       this.chatGateway.emitToUser(String(userId), 'new_notification', {
         _id: notification._id,
@@ -83,7 +96,6 @@ export class NotificationsService {
     } catch (err) {
       console.error('Failed to emit notification:', err);
     }
-
     return notification;
-  }
+}
 }

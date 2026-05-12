@@ -37,6 +37,7 @@ class ResetPasswordDto {
   @IsString()
   newPassword!: string;
 }
+
 class ChangePasswordDto {
   @IsString()
   currentPassword!: string;
@@ -48,38 +49,37 @@ class ChangePasswordDto {
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+@Post('register')
+@HttpCode(HttpStatus.CREATED)
+register(@Body() dto: RegisterDto) {
+  return this.authService.register(dto);
+}
 
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
-  }
+@Post('verify-email')
+@HttpCode(HttpStatus.OK)
+verifyEmail(@Body() dto: VerifyEmailDto) {
+  return this.authService.verifyEmail(dto.email, dto.code);
+}
 
-  @Post('verify-email')
-  @HttpCode(HttpStatus.OK)
-  verifyEmail(@Body() dto: VerifyEmailDto) {
-    return this.authService.verifyEmail(dto.email, dto.code);
-  }
-
-  @Post('resend-code')
-  @HttpCode(HttpStatus.OK)
-  resendVerification(@Body() dto: ResendDto) {
+@Post('resend-code')
+@HttpCode(HttpStatus.OK)
+resendVerification(@Body() dto: ResendDto) {
     return this.authService.resendVerification(dto.email);
-  }
+}
 
-  @Get('me')
-  @UseGuards(JwtAuthGuard)
-  getProfile(@CurrentUser() user: UserDocument) {
-    return this.authService.getProfile(String(user._id));
-  }
+@Get('me')
+@UseGuards(JwtAuthGuard)
+getProfile(@CurrentUser() user: UserDocument) {
+  return this.authService.getProfile(String(user._id));
+}
 
-  @Post('login')
+@Post('login')
 @HttpCode(HttpStatus.OK)
 async login(@Body() loginDto: LoginDto){
   return this.authService.login(loginDto);
 }
 
-  @Post('forgot-password')
+@Post('forgot-password')
 @HttpCode(HttpStatus.OK)
 async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
   return this.authService.forgotPassword(forgotPasswordDto);
@@ -110,6 +110,7 @@ changePassword(
     dto.newPassword,
   );
 }
+
 @Post('logout')
 @HttpCode(HttpStatus.OK)
 @UseGuards(JwtAuthGuard)
@@ -132,8 +133,12 @@ async googleCallback(
   const frontendUrl = `http://localhost:5173/auth/google/success?token=${token}&role=${user.role}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}`;
   return res.redirect(frontendUrl);
 }
+
 @Post('google/supabase')
-async googleSupabase(@Body() body: { email: string; name: string; photo: string }) {
+@HttpCode(HttpStatus.OK)
+async googleSupabase(
+  @Body() body: { email: string; name: string; photo: string; googleId?: string },
+) {
   return this.authService.googleLogin(body.email, body.name, body.photo);
 }
 }

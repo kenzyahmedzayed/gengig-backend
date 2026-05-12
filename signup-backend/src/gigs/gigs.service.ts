@@ -10,7 +10,7 @@ export class GigsService {
     @InjectModel(Gig.name) private readonly gigModel: Model<GigDocument>,
   ) {}
 
-  async create(agentId: string, dto: CreateGigDto): Promise<any> {
+async create(agentId: string, dto: CreateGigDto): Promise<any> {
   const gig = new this.gigModel({
     ...dto,
     postedBy: agentId,
@@ -49,7 +49,7 @@ export class GigsService {
   };
 }
 
-  async findAll(query: any = {}): Promise<GigDocument[]> {
+async findAll(query: any = {}): Promise<GigDocument[]> {
     const filter: any = {};
 
     if (!query.status) {
@@ -66,18 +66,17 @@ export class GigsService {
         { description: { $regex: query.search, $options: 'i' } },
       ];
     }
-
     return this.gigModel.find(filter).populate('postedBy', 'name email photo').exec();
-  }
+}
 
-  async findFeatured(): Promise<GigDocument[]> {
+async findFeatured(): Promise<GigDocument[]> {
     return this.gigModel
       .find({ isFeatured: true, status: 'open' })
       .populate('postedBy', 'name email photo')
       .exec();
-  }
+}
 
-  async findById(id: string): Promise<GigDocument> {
+async findById(id: string): Promise<GigDocument> {
   if (!id || id === 'undefined') {
     throw new NotFoundException('Invalid gig ID');
   }
@@ -89,7 +88,7 @@ export class GigsService {
   return gig;
 }
 
-  async findByAgent(agentId: string, status?: string): Promise<any[]> {
+async findByAgent(agentId: string, status?: string): Promise<any[]> {
   const filter: any = { postedBy: agentId };
   if (status && status !== 'all') {
     filter.status = status.toLowerCase();
@@ -114,24 +113,25 @@ export class GigsService {
   }));
 }
 
-  async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
+async update(id: string, agentId: string, data: Partial<Gig>): Promise<GigDocument | null> {
     const gig = await this.gigModel.findById(id);
     if (!gig) throw new NotFoundException('Gig not found');
     if (String(gig.postedBy) !== agentId) {
       throw new ForbiddenException('You can only update your own gigs');
     }
     return this.gigModel.findByIdAndUpdate(id, data, { returnDocument: 'after' }).exec();
-  }
+}
 
-  async delete(id: string, agentId: string): Promise<void> {
+async delete(id: string, agentId: string): Promise<void> {
     const gig = await this.gigModel.findById(id);
     if (!gig) throw new NotFoundException('Gig not found');
     if (String(gig.postedBy) !== agentId) {
       throw new ForbiddenException('You can only delete your own gigs');
     }
     await this.gigModel.findByIdAndDelete(id).exec();
-  }
-  async getRecommended(userId: string): Promise<GigDocument[]> {
+}
+
+async getRecommended(userId: string): Promise<GigDocument[]> {
   return this.gigModel
     .find({ status: 'open' })
     .populate('postedBy', 'name email photo')
@@ -170,12 +170,14 @@ async saveGig(gigId: string, userId: string): Promise<any> {
   await gig.save();
   return { saved: !alreadySaved, gigId };
 }
+
 async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
   const gig = await this.gigModel.findOne({ _id: gigId, postedBy: agentId });
   if (!gig) throw new NotFoundException('Gig not found');
   gig.status = 'completed';
   return gig.save();
 }
+
 async getSavedGigs(userId: string): Promise<any[]> {
   const gigs = await this.gigModel
     .find({ savedBy: userId })

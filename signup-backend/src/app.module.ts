@@ -28,17 +28,6 @@ import { SupportModule } from './support/support.module';
           'mongodb+srv://gengig_db_user:gengig1004@cluster0.ijnyk5x.mongodb.net/gengig-backend?appName=Cluster0',
       }),
     }),
-    UsersModule,
-    MailModule,
-    AuthModule,
-    GigsModule,
-    ApplicationsModule,
-    ChatModule,
-    CommunityModule,
-    ReviewsModule,
-    NotificationsModule,
-    PaymentsModule,
-    SupportModule,
-  ],
+    UsersModule, MailModule, AuthModule, GigsModule, ApplicationsModule, ChatModule, CommunityModule, ReviewsModule, NotificationsModule, PaymentsModule, SupportModule, ],
 })
 export class AppModule {}

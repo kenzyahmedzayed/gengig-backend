@@ -14,13 +14,10 @@
     "sourceMap": true,
     "outDir": "./dist",
     "ignoreDeprecations": "5.0",
-    //"baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noImplicitAny": false
   }
 }

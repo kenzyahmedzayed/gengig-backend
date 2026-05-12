@@ -10,12 +10,7 @@ import { MailModule } from '../mail/mail.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
-    imports: [
-        ConfigModule,
-        UsersModule,
-        MailModule,
-        PassportModule,
-        JwtModule.registerAsync({
+    imports: [ConfigModule, UsersModule, MailModule, PassportModule, JwtModule.registerAsync({
             inject: [ConfigService],
             useFactory: (configService: ConfigService) => {
                 const expiresIn =

@@ -73,27 +73,80 @@ export class ApplicationsController {
   getAgentDashboard(@CurrentUser() user: UserDocument) {
   return this.applicationsService.getAgentDashboard(String(user._id));
   }
-  // GET /teenlancer/applications
-@Get('/teenlancer/applications')
-@UseGuards(JwtAuthGuard)
-getTeenlancerApplications(@CurrentUser() user: UserDocument) {
+
+  @Get('/teenlancer/applications')
+  @UseGuards(JwtAuthGuard)
+  getTeenlancerApplications(@CurrentUser() user: UserDocument) {
   return this.applicationsService.findByTeenlancer(String(user._id));
-}
-@Put('agent/applications/:id/accept')
-@HttpCode(HttpStatus.OK)
-acceptByAgent(
+  }
+
+  @Put('agent/applications/:id/accept')
+  @HttpCode(HttpStatus.OK)
+  acceptByAgent(
   @Param('id') id: string,
   @CurrentUser() user: UserDocument,
 ) {
   return this.applicationsService.accept(id, String(user._id));
 }
 
-@Put('agent/applications/:id/reject')
-@HttpCode(HttpStatus.OK)
-rejectByAgent(
+  @Put('agent/applications/:id/reject')
+  @HttpCode(HttpStatus.OK)
+  rejectByAgent(
   @Param('id') id: string,
   @CurrentUser() user: UserDocument,
 ) {
   return this.applicationsService.reject(id, String(user._id));
+}
+
+  @Post('applications/:id/submit-work')
+  @HttpCode(HttpStatus.OK)
+  submitWork(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+  @Body() body: any,
+) {
+  return this.applicationsService.submitWork(id, String(user._id), body);
+}
+
+  @Get('applications/:id/submission')
+  getSubmission(@Param('id') id: string) {
+  return this.applicationsService.getSubmission(id);
+  }
+
+  @Post('applications/:id/approve-work')
+  @HttpCode(HttpStatus.OK)
+  approveWork(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+) {
+  return this.applicationsService.approveWork(id, String(user._id));
+}
+
+  @Post('applications/:id/reject-work')
+  @HttpCode(HttpStatus.OK)
+  rejectWork(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+  @Body() body: { reason: string },
+) {
+  return this.applicationsService.rejectWork(id, String(user._id), body.reason);
+}
+
+  @Post('applications/:id/review')
+  @HttpCode(HttpStatus.OK)
+  reviewTeenlancer(
+  @Param('id') id: string,
+  @CurrentUser() user: UserDocument,
+  @Body() body: { stars: number; text: string },
+) {
+  return this.applicationsService.reviewTeenlancer(id, String(user._id), body);
+}
+
+  @Get('teenlancer/applications/:id')
+  @UseGuards(JwtAuthGuard)
+  getApplicationById(
+  @Param('id') id: string,
+) {
+  return this.applicationsService.getSubmission(id);
 }
 }

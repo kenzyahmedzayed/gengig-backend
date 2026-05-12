@@ -9,37 +9,37 @@ import type { UserDocument } from '../users/users.schema';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
-  @Get()
+@Get()
   findAll(@CurrentUser() user: UserDocument) {
     return this.notificationsService.findAll(String(user._id));
-  }
+}
 
-  @Get('unread-count')
+@Get('unread-count')
   getUnreadCount(@CurrentUser() user: UserDocument) {
     return this.notificationsService.getUnreadCount(String(user._id));
-  }
+}
 
-  @Put('read-all')
-  @HttpCode(HttpStatus.OK)
+@Put('read-all')
+@HttpCode(HttpStatus.OK)
   markAllAsRead(@CurrentUser() user: UserDocument) {
     return this.notificationsService.markAllAsRead(String(user._id));
-  }
+}
 
-  @Put(':id/read')
-  @HttpCode(HttpStatus.OK)
+@Put(':id/read')
+@HttpCode(HttpStatus.OK)
   markAsRead(
     @Param('id') id: string,
     @CurrentUser() user: UserDocument,
   ) {
     return this.notificationsService.markAsRead(id, String(user._id));
-  }
+}
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
+@Delete(':id')
+@HttpCode(HttpStatus.OK)
   delete(
     @Param('id') id: string,
     @CurrentUser() user: UserDocument,
   ) {
     return this.notificationsService.delete(id, String(user._id));
-  }
+}
 }

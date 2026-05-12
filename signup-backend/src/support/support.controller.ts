@@ -25,15 +25,16 @@ class NewsletterDto {
 
 @Controller()
 export class SupportController {
-  @Post('support/ticket')
-  @HttpCode(HttpStatus.OK)
+  
+@Post('support/ticket')
+@HttpCode(HttpStatus.OK)
   submitTicket(@Body() dto: SupportTicketDto) {
     return { message: 'Support ticket submitted successfully. We will get back to you soon!' };
-  }
+}
 
-  @Post('newsletter/subscribe')
-  @HttpCode(HttpStatus.OK)
+@Post('newsletter/subscribe')
+@HttpCode(HttpStatus.OK)
   subscribe(@Body() dto: NewsletterDto) {
     return { message: 'Successfully subscribed to newsletter!' };
-  }
+}
 }

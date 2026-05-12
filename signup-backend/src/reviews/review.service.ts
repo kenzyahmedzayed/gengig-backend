@@ -11,7 +11,7 @@ export class ReviewsService {
     private readonly reviewModel: Model<ReviewDocument>,
   ) {}
 
-  async create(
+async create(
     agentId: string,
     agentRole: string,
     dto: CreateReviewDto,
@@ -39,27 +39,27 @@ export class ReviewsService {
     });
 
     return review.save();
-  }
+}
 
-  async getTeenlancerReviews(teenlancerId: string): Promise<ReviewDocument[]> {
+async getTeenlancerReviews(teenlancerId: string): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find({ teenlancer: teenlancerId })
       .populate('reviewer', 'name photo company')
       .populate('gig', 'title')
       .sort({ createdAt: -1 })
       .exec();
-  }
+}
 
-  async getAgentReviews(agentId: string): Promise<ReviewDocument[]> {
+async getAgentReviews(agentId: string): Promise<ReviewDocument[]> {
     return this.reviewModel
       .find({ reviewer: agentId })
       .populate('teenlancer', 'name photo')
       .populate('gig', 'title')
       .sort({ createdAt: -1 })
       .exec();
-  }
+}
 
-  async getTeenlancerRating(teenlancerId: string): Promise<any> {
+async getTeenlancerRating(teenlancerId: string): Promise<any> {
     const reviews = await this.reviewModel
       .find({ teenlancer: teenlancerId })
       .exec();
@@ -75,9 +75,9 @@ export class ReviewsService {
       averageRating: Math.round(average * 10) / 10,
       totalReviews: reviews.length,
     };
-  }
+}
 
-  async getAgentStats(agentId: string): Promise<any> {
+async getAgentStats(agentId: string): Promise<any> {
     const gigsPosted = await this.reviewModel.countDocuments({
       reviewer: agentId,
     });
@@ -90,8 +90,9 @@ export class ReviewsService {
       gigsPosted,
       totalReviews: reviews.length,
     };
-  }
-  async getPlatformStats(): Promise<any> {
+}
+  
+async getPlatformStats(): Promise<any> {
   return {
     totalTeenlancers: 500,
     totalAgents: 200,

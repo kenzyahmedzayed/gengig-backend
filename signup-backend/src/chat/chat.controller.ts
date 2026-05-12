@@ -45,39 +45,38 @@ export class ChatController {
       sessionId,
       userType,
     } as SendMessageDto;
-  }
+}
 
-  @Post('send')
-  @HttpCode(HttpStatus.OK)
+@Post('send')
+@HttpCode(HttpStatus.OK)
   sendMessage(
     @CurrentUser() user: UserDocument,
     @Body() body: any,
   ) {
     const dto = this.normalizeSendMessageDto(body, user);
-
     return this.chatService.sendMessage(
       String(user._id),
       dto.sessionId,
       dto.message,
       dto.userType,
     );
-  }
+}
 
-  @Get('sessions')
+@Get('sessions')
   getSessions(@CurrentUser() user: UserDocument) {
     return this.chatService.getSessions(String(user._id));
-  }
+}
 
-  @Get('history/:sessionId')
+@Get('history/:sessionId')
   getHistory(
     @CurrentUser() user: UserDocument,
     @Param('sessionId') sessionId: string,
   ) {
     return this.chatService.getHistory(String(user._id), sessionId);
-  }
+}
 
-  @Delete('session/:sessionId')
-  @HttpCode(HttpStatus.OK)
+@Delete('session/:sessionId')
+@HttpCode(HttpStatus.OK)
   deleteSession(
     @CurrentUser() user: UserDocument,
     @Param('sessionId') sessionId: string,

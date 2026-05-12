@@ -37,5 +37,4 @@ export class CommunityPost {
   @Prop({ type: [CommentSchema], default: [] })
   comments!: Comment[];
 }
-
 export const CommunityPostSchema = SchemaFactory.createForClass(CommunityPost);

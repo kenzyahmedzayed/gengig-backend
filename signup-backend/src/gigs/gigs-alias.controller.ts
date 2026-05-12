@@ -8,18 +8,24 @@ import type { UserDocument } from '../users/users.schema';
 export class GigsAliasController {
   constructor(private readonly gigsService: GigsService) {}
 
-  @Get('agent/gigs')
-  @UseGuards(JwtAuthGuard)
+@Get('agent/gigs')
+@UseGuards(JwtAuthGuard)
   findAgentGigs(@CurrentUser() user: UserDocument) {
     return this.gigsService.findByAgent(String(user._id));
-  }
+}
 
-  @Get('teenlancer/gigs-list')
-  @UseGuards(JwtAuthGuard)
+@Get('teenlancer/gigs-list')
+@UseGuards(JwtAuthGuard)
   findTeenlancerGigsList(
     @CurrentUser() user: UserDocument,
     @Query('status') status: string,
   ) {
     return this.gigsService.findAll(status ? { status } : {});
-  }
+}
+
+@Get('teenlancer/saved-gigs')
+@UseGuards(JwtAuthGuard)
+  getSavedGigs(@CurrentUser() user: UserDocument) {
+  return this.gigsService.getSavedGigs(String(user._id));
+}
 }

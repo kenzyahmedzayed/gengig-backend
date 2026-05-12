@@ -19,7 +19,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  async validate(
+async validate(
     accessToken: string,
     refreshToken: string,
     profile: any,
@@ -30,11 +30,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const photo = photos[0]?.value || '';
     const fullName = `${name.givenName} ${name.familyName}`;
 
-    // Find or create user
     let user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      // Create new user with Google data
       user = await this.usersService.create({
         name: fullName,
         email,
