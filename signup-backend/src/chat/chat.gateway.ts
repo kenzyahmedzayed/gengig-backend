@@ -35,29 +35,41 @@ handleConnection(client: Socket) {
 }
 
 handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-    if (!this.server) return;
-    for (const [userId, socketId] of this.connectedUsers.entries()) {
-      if (socketId === client.id) {
-        this.connectedUsers.delete(userId);
-        this.server.emit('user_offline', { userId });
-        break;
-      }
+  console.log(`Client disconnected: ${client.id}`);
+  if (!this.server) return;
+  for (const [userId, socketId] of this.connectedUsers.entries()) {
+    if (socketId === client.id) {
+      this.connectedUsers.delete(userId);
+      // Notify contacts
+      this.messagingService.getContactIds(userId).then(contacts => {
+        contacts.forEach(contactId => {
+          this.server.to(contactId).emit('user_offline', { userId });
+        });
+      }).catch(() => {});
+      break;
     }
+  }
 }
 
 @SubscribeMessage('join')
-  handleJoin(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    if (!data?.userId || !this.server) return;
-    this.connectedUsers.set(data.userId, client.id);
-    client.join(data.userId);
-    this.server.emit('user_online', { userId: data.userId });
-    const onlineUsers = Array.from(this.connectedUsers.keys());
-    client.emit('online_users', { users: onlineUsers });
-    console.log(`User ${data.userId} joined ✅`);
+async handleJoin(
+  @MessageBody() data: { userId: string },
+  @ConnectedSocket() client: Socket,
+) {
+  if (!data?.userId || !this.server) return;
+  this.connectedUsers.set(data.userId, client.id);
+  client.join(data.userId);
+  try {
+    const contacts = await this.messagingService.getContactIds(data.userId);
+    contacts.forEach(contactId => {
+      this.server.to(contactId).emit('user_online', { userId: data.userId });
+    });
+  } catch (err) {
+
+  }
+  const onlineUsers = Array.from(this.connectedUsers.keys());
+  client.emit('online_users', { users: onlineUsers });
+  console.log(`User ${data.userId} joined ✅`);
 }
 
 @SubscribeMessage('send_message')

@@ -5,6 +5,7 @@ import { Application, ApplicationDocument, ApplicationStatus } from './applicati
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { Gig, GigDocument } from '../gigs/gig.schema';
 import { Notification, NotificationDocument } from '../notifications/notification.schema';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class ApplicationsService {
@@ -15,6 +16,7 @@ export class ApplicationsService {
     private readonly gigModel: Model<GigDocument>,
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
 async apply(
@@ -41,13 +43,12 @@ async apply(
 
   const gig = await this.gigModel.findById(gigId).exec();
   if (gig) {
-    await this.notificationModel.create({
-      userId: gig.postedBy,
-      type: 'new_application',
-      title: 'New Application! 🎉',
-      message: `Someone applied to your gig "${gig.title}"`,
-      isRead: false,
-    });
+    await this.notificationsService.create(
+  String(gig.postedBy),
+    'New Application! 🎉',
+    `Someone applied to your gig "${gig.title}"`,
+    'new_application',
+);
   }
   return application;
 }
@@ -140,13 +141,12 @@ async accept(id: string, agentId: string): Promise<ApplicationDocument> {
     { status: ApplicationStatus.REJECTED }
   );
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'application_accepted',
-    title: 'Application Accepted! 🎉',
-    message: `Congratulations! Your application for "${gig.title}" has been accepted.`,
-    isRead: false,
-  });
+  await this.notificationsService.create(
+  String(application.appliedBy),
+  'Application Accepted! 🎉',
+  `Congratulations! Your application for "${gig.title}" has been accepted.`,
+  'application_accepted',
+  );
 
   return application;
 }
@@ -167,20 +167,19 @@ async reject(id: string, agentId: string): Promise<ApplicationDocument> {
   application.status = ApplicationStatus.REJECTED;
   await application.save();
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'application_rejected',
-    title: 'Application Update',
-    message: `Your application for "${gig.title}" was not selected this time. Keep applying!`,
-    isRead: false,
-  });
+  await this.notificationsService.create(
+  String(application.appliedBy),
+  'Application Update',
+  `Your application for "${gig.title}" was not selected this time.`,
+  'application_rejected',
+  );
 
   return application;
 }
 
 async reset(id: string, agentId: string): Promise<ApplicationDocument> {
     return this.updateStatus(id, agentId, ApplicationStatus.PENDING);
-  }
+}
 
 private async updateStatus(
     id: string,
@@ -263,13 +262,12 @@ async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
   await application.save();
 
   const gig = application.gig as any;
-  await this.notificationModel.create({
-    userId: gig.postedBy,
-    type: 'general',
-    title: 'Work Submitted! 📦',
-    message: `A teenlancer submitted work for "${gig.title}". Please review it.`,
-    isRead: false,
-  });
+  await this.notificationsService.create(
+  String(gig.postedBy),
+  'Work Submitted! 📦',
+  `A teenlancer submitted work for "${gig.title}". Please review it.`,
+  'general',
+  );
 
   return { success: true, message: 'Work submitted successfully' };
 }
@@ -310,13 +308,12 @@ async approveWork(id: string, agentId: string): Promise<any> {
 
   await this.gigModel.findByIdAndUpdate(gig._id, { status: 'completed' });
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'application_accepted',
-    title: 'Work Approved! 🎉',
-    message: `Your work for "${gig.title}" has been approved! Payment has been released.`,
-    isRead: false,
-  });
+  await this.notificationsService.create(
+  String(application.appliedBy),
+  'Work Approved! 🎉',
+  `Your work for "${gig.title}" has been approved! Payment has been released.`,
+  'application_accepted',
+  );
 
   return { success: true, message: 'Work approved and payment released' };
 }
