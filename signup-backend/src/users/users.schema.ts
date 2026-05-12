@@ -91,6 +91,9 @@ export class User {
   name: string;
   maskedNumber: string;
   expiry: string;
-};
+  };
+  
+  @Prop({ type: [String], default: [] })
+  savedGigs?: string[];
 }
 export const UserSchema = SchemaFactory.createForClass(User);

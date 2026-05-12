@@ -3,11 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Gig, GigDocument } from './gig.schema';
 import { CreateGigDto } from './dto/create-gig.dto';
+import { User, UserDocument } from '../users/users.schema';
+
 
 @Injectable()
 export class GigsService {
   constructor(
     @InjectModel(Gig.name) private readonly gigModel: Model<GigDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
 
 async create(agentId: string, dto: CreateGigDto): Promise<any> {
@@ -76,16 +79,27 @@ async findFeatured(): Promise<GigDocument[]> {
       .exec();
 }
 
-async findById(id: string): Promise<GigDocument> {
+async findById(id: string, userId?: string): Promise<any> {
   if (!id || id === 'undefined') {
     throw new NotFoundException('Invalid gig ID');
   }
+
   const gig = await this.gigModel
     .findById(id)
     .populate('postedBy', 'name photo company')
     .exec();
+
   if (!gig) throw new NotFoundException('Gig not found');
-  return gig;
+
+  const gigObj = gig.toObject() as any;
+  
+  if (userId) {
+    const savedBy = gig.savedBy || [];
+    gigObj.isSaved = savedBy.some(id => id.toString() === userId);
+  } else {
+    gigObj.isSaved = false;
+  }
+  return gigObj;
 }
 
 async findByAgent(agentId: string, status?: string): Promise<any[]> {
@@ -168,7 +182,14 @@ async saveGig(gigId: string, userId: string): Promise<any> {
   }
 
   await gig.save();
-  return { saved: !alreadySaved, gigId };
+
+  await this.userModel.findByIdAndUpdate(userId, 
+    alreadySaved 
+      ? { $pull: { savedGigs: gigId } }
+      : { $addToSet: { savedGigs: gigId } }
+  );
+
+  return { isSaved: !alreadySaved, gigId };
 }
 
 async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
@@ -179,11 +200,21 @@ async completeGig(gigId: string, agentId: string): Promise<GigDocument> {
 }
 
 async getSavedGigs(userId: string): Promise<any[]> {
-  const gigs = await this.gigModel
-    .find({ savedBy: userId })
-    .populate('postedBy', 'name photo company')
-    .sort({ createdAt: -1 })
+  const user = await this.userModel
+    .findById(userId)
+    .select('savedGigs')
     .exec();
-  return gigs;
+
+  if (!user?.savedGigs || user.savedGigs.length === 0) return [];
+
+  const gigs = await this.gigModel
+    .find({ _id: { $in: user.savedGigs } })
+    .populate('postedBy', 'name photo company')
+    .exec();
+
+  return gigs.map(gig => ({
+    ...gig.toObject(),
+    isSaved: true,
+  }));
 }
 }

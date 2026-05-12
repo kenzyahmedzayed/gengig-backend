@@ -183,4 +183,27 @@ async getUnreadCounts(userId: string): Promise<any> {
     })),
   };
 }
+
+async getContactIds(userId: string): Promise<string[]> {
+  try {
+    if (!userId || userId === '') return [];
+    const messages = await this.messageModel
+      .find({
+        $or: [{ sender: userId }, { receiver: userId }],
+      })
+      .select('sender receiver')
+      .exec();
+
+    const contactIds = new Set<string>();
+    for (const msg of messages) {
+      const senderId = String(msg.sender);
+      const receiverId = String(msg.receiver);
+      if (senderId !== userId && senderId) contactIds.add(senderId);
+      if (receiverId !== userId && receiverId) contactIds.add(receiverId);
+    }
+    return Array.from(contactIds);
+  } catch (err) {
+    return [];
+  }
+}
 }
