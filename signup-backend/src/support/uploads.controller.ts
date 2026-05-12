@@ -4,10 +4,11 @@ import { cloudinary } from '../users/cloudinary.config';
 
 @Controller('uploads')
 export class UploadsController {
-  @Post('image')
-  @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('image'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  
+@Post('image')
+@HttpCode(HttpStatus.OK)
+@UseInterceptors(FileInterceptor('image'))
+async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -25,8 +26,8 @@ export class UploadsController {
     return {
       url: (result as any).secure_url,
     };
-  }
-  // POST /uploads/file
+}
+
 @Post('file')
 @HttpCode(HttpStatus.OK)
 @UseInterceptors(FileInterceptor('file'))

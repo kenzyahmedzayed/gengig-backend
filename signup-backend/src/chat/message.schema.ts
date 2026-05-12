@@ -20,5 +20,4 @@ export class Message {
   @Prop({ default: true })
   isDelivered!: boolean;
 }
-
 export const MessageSchema = SchemaFactory.createForClass(Message);

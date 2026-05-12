@@ -10,13 +10,11 @@ export class MessagingService {
     private readonly messageModel: Model<MessageDocument>,
   ) {}
 
-  async getContacts(userId: string): Promise<any[]> {
+async getContacts(userId: string): Promise<any[]> {
   try {
     if (!userId || userId === '' || userId === 'undefined') {
       return [];
     }
-
-    // Only get messages with valid sender and receiver
     const messages = await this.messageModel
       .find({
         $or: [{ sender: userId }, { receiver: userId }],
@@ -27,9 +25,7 @@ export class MessagingService {
       .populate('receiver', 'name photo role _id')
       .sort({ createdAt: -1 })
       .exec();
-
     const contactsMap = new Map();
-
     for (const msg of messages) {
       try {
         const sender = msg.sender as any;
@@ -68,14 +64,14 @@ export class MessagingService {
         continue;
       }
     }
-
     return Array.from(contactsMap.values());
   } catch (err: any) {
     console.error('getContacts error:', err.message);
     return [];
   }
 }
-  async getMessages(userId: string, otherUserId: string): Promise<MessageDocument[]> {
+  
+async getMessages(userId: string, otherUserId: string): Promise<MessageDocument[]> {
     return this.messageModel
       .find({
         $or: [
@@ -87,9 +83,9 @@ export class MessagingService {
       .populate('receiver', 'name photo')
       .sort({ createdAt: 1 })
       .exec();
-  }
-
-  async sendMessage(
+}
+  
+async sendMessage(
   senderId: string,
   receiverId: string,
   content: string,
@@ -128,8 +124,7 @@ async markAsRead(userId: string, otherUserId: string): Promise<any> {
   return { message: 'Messages marked as read' };
 }
 
-  
-  async createConversation(userId: string, otherUserId: string): Promise<any> {
+async createConversation(userId: string, otherUserId: string): Promise<any> {
   const existing = await this.messageModel.findOne({
     $or: [
       { sender: userId, receiver: otherUserId },
@@ -154,7 +149,6 @@ async markAsRead(userId: string, otherUserId: string): Promise<any> {
       },
     };
   }
-
   return {
     conversationId: `conv_${userId}_${otherUserId}`,
     contact: {
@@ -162,6 +156,7 @@ async markAsRead(userId: string, otherUserId: string): Promise<any> {
     },
   };
 }
+
 async getUnreadCounts(userId: string): Promise<any> {
   const unreadMessages = await this.messageModel.aggregate([
     {

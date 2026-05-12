@@ -37,5 +37,4 @@ export class Notification {
   @Prop()
   link?: string;
 }
-
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

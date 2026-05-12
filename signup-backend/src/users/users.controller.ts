@@ -34,15 +34,15 @@ export class UsersController {
         ? { notificationPreferences: dto.notificationPreferences }
         : {}),
     };
-  }
+}
 
-  @Get('profile')
+@Get('profile')
   getProfile(@CurrentUser() user: UserDocument) {
     return this.usersService.findById(String(user._id));
-  }
+}
 
-  @Post('onboarding/teenlancer')
-  @HttpCode(HttpStatus.OK)
+@Post('onboarding/teenlancer')
+@HttpCode(HttpStatus.OK)
   teenlancerOnboarding(
     @CurrentUser() user: UserDocument,
     @Body() dto: TeenlancerOnboardingDto,
@@ -51,10 +51,10 @@ export class UsersController {
       ...dto,
       isOnboardingComplete: true,
     });
-  }
+}
 
-  @Post('onboarding/agent')
-  @HttpCode(HttpStatus.OK)
+@Post('onboarding/agent')
+@HttpCode(HttpStatus.OK)
   agentOnboarding(
     @CurrentUser() user: UserDocument,
     @Body() dto: AgentOnboardingDto,
@@ -63,7 +63,7 @@ export class UsersController {
       ...dto,
       isOnboardingComplete: true,
     });
-  }
+}
 
 @Put('profile')
 @HttpCode(HttpStatus.OK)
@@ -80,12 +80,13 @@ updateProfile(
   return this.usersService.updateById(String(user._id), normalized);
 }
 
-  @Delete('account')
-  @HttpCode(HttpStatus.OK)
+@Delete('account')
+@HttpCode(HttpStatus.OK)
   async deleteAccount(@CurrentUser() user: UserDocument) {
     await this.usersService.deleteById(String(user._id));
     return { message: 'Account deleted successfully' };
-  }
+}
+
 @Put('settings')
 @HttpCode(HttpStatus.OK)
 updateSettings(
@@ -97,6 +98,7 @@ updateSettings(
     this.normalizeUserUpdate(dto),
   );
 }
+
 @Get('settings')
 getSettings(@CurrentUser() user: UserDocument) {
   return this.usersService.findById(String(user._id));
@@ -112,6 +114,7 @@ updateNotifications(
     notificationPreferences: dto,
   });
 }
+
 @Post('upload-photo')
 @UseGuards(JwtAuthGuard)
 @UseInterceptors(FileInterceptor('photo'))
@@ -148,6 +151,7 @@ async uploadPhoto(
   url: photoUrl,
 };
 }
+
 @Get('teenlancer/stats')
 @UseGuards(JwtAuthGuard)
 getTeenlancerStats(@CurrentUser() user: UserDocument) {
@@ -159,6 +163,7 @@ getTeenlancerStats(@CurrentUser() user: UserDocument) {
 getTeenlancerActivity(@CurrentUser() user: UserDocument) {
   return this.usersService.getTeenlancerActivity(String(user._id));
 }
+
 @Get('teenlancer/dashboard')
 @UseGuards(JwtAuthGuard)
 getTeenlancerDashboard(@CurrentUser() user: UserDocument) {
@@ -206,12 +211,13 @@ async uploadImage(
     url: (result as any).secure_url,
   };
 }
+
 @Get('agent/stats')
 @UseGuards(JwtAuthGuard)
 getAgentStats(@CurrentUser() user: UserDocument) {
   return this.usersService.getAgentStats(String(user._id));
 }
-// GET /users/premium-status
+
 @Get('premium-status')
 @UseGuards(JwtAuthGuard)
 async getPremiumStatus(@CurrentUser() user: UserDocument) {

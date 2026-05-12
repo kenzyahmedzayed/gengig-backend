@@ -27,7 +27,6 @@ export class PaymentCard {
   @Prop({ default: false })
   isDefault!: boolean;
 }
-
 export const PaymentCardSchema = SchemaFactory.createForClass(PaymentCard);
 
 @Schema({ timestamps: true })
@@ -47,5 +46,4 @@ export class Transaction {
   @Prop({ default: 'completed' })
   status!: string;
 }
-
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

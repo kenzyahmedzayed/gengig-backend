@@ -7,6 +7,8 @@ export enum ApplicationStatus {
   PENDING = 'pending',
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
+  WORK_SUBMITTED = 'work_submitted',
+  COMPLETED = 'completed',
 }
 
 @Schema({ timestamps: true })
@@ -34,6 +36,22 @@ export class Application {
 
   @Prop()
   sampleWork?: string;
+
+  @Prop({ type: Object })
+  workSubmission?: {
+    description: string;
+    deliverables: string;
+    portfolioLink: string;
+    fileUrl: string;
+    notes: string;
+    submittedAt: Date;
+  };
+
+  @Prop({ default: 'pending', enum: ['pending', 'held', 'released'] })
+  paymentStatus?: string;
+
+  @Prop({ default: 0 })
+  paymentAmount?: number;
 }
 
 export const ApplicationSchema = SchemaFactory.createForClass(Application);

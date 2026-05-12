@@ -18,24 +18,24 @@ export class CommunityController {
     };
   }
 
-  @Get('posts')
+@Get('posts')
   findAll() {
     return this.communityService.findAll();
-  }
+}
 
-  @Get('active-members')
+@Get('active-members')
   getActiveMembers() {
     return this.communityService.getActiveMembers();
-  }
+}
 
-  @Get('trending-tags')
+@Get('trending-tags')
   getTrendingTags() {
     return this.communityService.getTrendingTags();
-  }
+}
 
-  @Post('posts')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
+@Post('posts')
+@UseGuards(JwtAuthGuard)
+@HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserDocument,
     @Body() body: any,
@@ -45,21 +45,21 @@ export class CommunityController {
       user.role,
       this.normalizeCreatePostDto(body),
     );
-  }
+}
 
-  @Post('posts/:id/like')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
+@Post('posts/:id/like')
+@UseGuards(JwtAuthGuard)
+@HttpCode(HttpStatus.OK)
   likePost(
     @Param('id') id: string,
     @CurrentUser() user: UserDocument,
   ) {
-    return this.communityService.likePost(id, String(user._id));
-  }
+    return this.communityService.likePost(id, String(user._id));  
+}
 
-  @Post('posts/:id/comments')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.CREATED)
+@Post('posts/:id/comments')
+@UseGuards(JwtAuthGuard)
+@HttpCode(HttpStatus.CREATED)
   addComment(
     @Param('id') id: string,
     @CurrentUser() user: UserDocument,
@@ -71,10 +71,15 @@ export class CommunityController {
       user.role,
       dto,
     );
-  }
+}
 
-  @Get('posts/:id/comments')
+@Get('posts/:id/comments')
   getComments(@Param('id') id: string) {
     return this.communityService.getComments(id);
-  }
+}
+  
+@Get('posts/:id')
+getPost(@Param('id') id: string) {
+  return this.communityService.findOne(id);
+}
 }

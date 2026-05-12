@@ -17,7 +17,7 @@ export class ApplicationsService {
     private readonly notificationModel: Model<NotificationDocument>,
   ) {}
 
-  async apply(
+async apply(
   teenlancerId: string,
   gigId: string,
   dto: CreateApplicationDto,
@@ -39,10 +39,8 @@ export class ApplicationsService {
 
   await application.save();
 
-  // Get gig to find agent
   const gig = await this.gigModel.findById(gigId).exec();
   if (gig) {
-    // Notify agent
     await this.notificationModel.create({
       userId: gig.postedBy,
       type: 'new_application',
@@ -51,11 +49,10 @@ export class ApplicationsService {
       isRead: false,
     });
   }
-
   return application;
 }
 
-  async findByAgent(agentId: string): Promise<any[]> {
+async findByAgent(agentId: string): Promise<any[]> {
   const apps = await this.applicationModel
     .find()
     .populate({
@@ -86,7 +83,7 @@ export class ApplicationsService {
     }));
 }
 
-  async getCounts(agentId: string): Promise<any> {
+async getCounts(agentId: string): Promise<any> {
     const applications = await this.findByAgent(agentId);
     return {
       all: applications.length,
@@ -96,7 +93,7 @@ export class ApplicationsService {
     };
   }
 
-  async findByTeenlancer(teenlancerId: string): Promise<any[]> {
+async findByTeenlancer(teenlancerId: string): Promise<any[]> {
   const apps = await this.applicationModel
     .find({ appliedBy: teenlancerId })
     .populate('gig', 'title category budget postedBy status')
@@ -117,7 +114,7 @@ export class ApplicationsService {
   }));
 }
 
-  async accept(id: string, agentId: string): Promise<ApplicationDocument> {
+async accept(id: string, agentId: string): Promise<ApplicationDocument> {
   const application = await this.applicationModel
     .findById(id)
     .populate('gig')
@@ -133,19 +130,16 @@ export class ApplicationsService {
   application.status = ApplicationStatus.ACCEPTED;
   await application.save();
 
-  // Update gig status to active
   await this.gigModel.findByIdAndUpdate(gig._id, {
     status: 'active',
     acceptedTeenlancer: application.appliedBy,
   });
 
-  // Reject all other applications
   await this.applicationModel.updateMany(
     { gig: gig._id, _id: { $ne: id } },
     { status: ApplicationStatus.REJECTED }
   );
 
-  // Send notification to teenlancer
   await this.notificationModel.create({
     userId: application.appliedBy,
     type: 'application_accepted',
@@ -157,7 +151,7 @@ export class ApplicationsService {
   return application;
 }
 
-  async reject(id: string, agentId: string): Promise<ApplicationDocument> {
+async reject(id: string, agentId: string): Promise<ApplicationDocument> {
   const application = await this.applicationModel
     .findById(id)
     .populate('gig')
@@ -173,7 +167,6 @@ export class ApplicationsService {
   application.status = ApplicationStatus.REJECTED;
   await application.save();
 
-  // Send notification to teenlancer
   await this.notificationModel.create({
     userId: application.appliedBy,
     type: 'application_rejected',
@@ -185,11 +178,11 @@ export class ApplicationsService {
   return application;
 }
 
-  async reset(id: string, agentId: string): Promise<ApplicationDocument> {
+async reset(id: string, agentId: string): Promise<ApplicationDocument> {
     return this.updateStatus(id, agentId, ApplicationStatus.PENDING);
   }
 
-  private async updateStatus(
+private async updateStatus(
     id: string,
     agentId: string,
     status: ApplicationStatus,
@@ -210,7 +203,7 @@ export class ApplicationsService {
     return application.save();
   }
 
-  async getTeenlancerDashboard(userId: string): Promise<any> {
+async getTeenlancerDashboard(userId: string): Promise<any> {
     const applications = await this.applicationModel
       .find({ appliedBy: userId })
       .populate('gig')
@@ -225,7 +218,7 @@ export class ApplicationsService {
     };
   }
 
-  async getAgentDashboard(userId: string): Promise<any> {
+async getAgentDashboard(userId: string): Promise<any> {
     const applications = await this.applicationModel
       .find()
       .populate({
@@ -248,4 +241,148 @@ export class ApplicationsService {
       },
     };
   }
+
+async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('gig')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  application.status = ApplicationStatus.WORK_SUBMITTED;
+  application.workSubmission = {
+    description: body.description || '',
+    deliverables: body.deliverables || '',
+    portfolioLink: body.portfolioLink || '',
+    fileUrl: body.fileUrl || body.file || '',
+    notes: body.notes || '',
+    submittedAt: new Date(),
+  };
+
+  await application.save();
+
+  const gig = application.gig as any;
+  await this.notificationModel.create({
+    userId: gig.postedBy,
+    type: 'general',
+    title: 'Work Submitted! 📦',
+    message: `A teenlancer submitted work for "${gig.title}". Please review it.`,
+    isRead: false,
+  });
+
+  return { success: true, message: 'Work submitted successfully' };
+}
+
+async getSubmission(id: string): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('appliedBy', 'name photo')
+    .populate('gig', 'title budget')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  return {
+    ...application.workSubmission,
+    teenlancer: application.appliedBy,
+    amount: application.paymentAmount,
+    status: application.status,
+  };
+}
+
+async approveWork(id: string, agentId: string): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('gig')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  const gig = application.gig as any;
+  if (String(gig.postedBy) !== agentId) {
+    throw new ForbiddenException('Not authorized');
+  }
+
+  application.status = ApplicationStatus.COMPLETED;
+  application.paymentStatus = 'released';
+  await application.save();
+
+  await this.gigModel.findByIdAndUpdate(gig._id, { status: 'completed' });
+
+  await this.notificationModel.create({
+    userId: application.appliedBy,
+    type: 'application_accepted',
+    title: 'Work Approved! 🎉',
+    message: `Your work for "${gig.title}" has been approved! Payment has been released.`,
+    isRead: false,
+  });
+
+  return { success: true, message: 'Work approved and payment released' };
+}
+
+async rejectWork(id: string, agentId: string, reason: string): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('gig')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  const gig = application.gig as any;
+
+  application.status = ApplicationStatus.ACCEPTED;
+  await application.save();
+
+  await this.notificationModel.create({
+    userId: application.appliedBy,
+    type: 'general',
+    title: 'Revision Requested 🔄',
+    message: `Agent requested revision for "${gig.title}": ${reason}`,
+    isRead: false,
+  });
+
+  return { success: true, message: 'Revision requested' };
+}
+
+async reviewTeenlancer(id: string, agentId: string, body: { stars: number; text: string }): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('gig')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  await this.notificationModel.create({
+    userId: application.appliedBy,
+    type: 'new_review',
+    title: 'New Review! ⭐',
+    message: `You received a ${body.stars}-star review!`,
+    isRead: false,
+  });
+
+  return { success: true, message: 'Review submitted' };
+}
+
+async findById(id: string, userId: string): Promise<any> {
+  const application = await this.applicationModel
+    .findById(id)
+    .populate('gig', 'title category budget deadline status')
+    .populate('appliedBy', 'name photo')
+    .exec();
+
+  if (!application) throw new NotFoundException('Application not found');
+
+  return {
+    _id: application._id,
+    status: application.status,
+    coverLetter: application.coverLetter,
+    proposedRate: application.proposedRate,
+    deliveryTimeline: application.deliveryTimeline,
+    workSubmission: application.workSubmission,
+    paymentStatus: application.paymentStatus,
+    appliedAt: (application as any).createdAt,
+    gig: application.gig,
+  };
+}
 }

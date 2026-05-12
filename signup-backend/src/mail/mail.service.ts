@@ -17,9 +17,9 @@ export class MailService {
     pass: 'giagkhuqbltzljrw',
   },
 });
-  }
+}
 
-  async sendVerificationEmail(
+async sendVerificationEmail(
     toEmail: string,
     name: string,
     code: string,

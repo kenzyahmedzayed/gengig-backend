@@ -20,25 +20,25 @@ export class MessagingController {
     private readonly chatGateway: ChatGateway,
   ) {}
 
-  @Get('contacts')
-  async getContacts(@CurrentUser() user: UserDocument) {
+@Get('contacts')
+async getContacts(@CurrentUser() user: UserDocument) {
     const userId = String(user._id);
     console.log('getContacts called with userId:', userId);
     if (!userId || userId === 'undefined' || userId === '') {
       return [];
     }
     return this.messagingService.getContacts(userId);
-  }
+}
 
-  @Get('messages/:userId')
+@Get('messages/:userId')
   getMessages(
     @CurrentUser() user: UserDocument,
     @Param('userId') otherUserId: string,
   ) {
     return this.messagingService.getMessages(String(user._id), otherUserId);
-  }
+}
 
-  @Post('messages/:userId')
+@Post('messages/:userId')
 @HttpCode(HttpStatus.CREATED)
 async sendMessage(
   @CurrentUser() user: UserDocument,
@@ -50,14 +50,10 @@ async sendMessage(
     receiverId,
     dto.content,
   );
-
-  // Emit real-time message to receiver
   this.chatGateway.emitToUser(receiverId, 'receive_message', {
     ...message,
     isMine: false,
   });
-
-  // Emit real-time notification to receiver
   this.chatGateway.emitToUser(receiverId, 'new_notification', {
     type: 'new_message',
     title: 'New Message 💬',
@@ -65,20 +61,20 @@ async sendMessage(
     from: user.name,
     photo: user.photo || '',
   });
-
   return message;
 }
-  @Put('messages/:userId/read')
-  @HttpCode(HttpStatus.OK)
+  
+@Put('messages/:userId/read')
+@HttpCode(HttpStatus.OK)
   markAsRead(
     @CurrentUser() user: UserDocument,
     @Param('userId') otherUserId: string,
   ) {
     return this.messagingService.markAsRead(String(user._id), otherUserId);
-  }
+}
 
-  @Post('conversations')
-  @HttpCode(HttpStatus.OK)
+@Post('conversations')
+@HttpCode(HttpStatus.OK)
   async createConversation(
     @CurrentUser() user: UserDocument,
     @Body() body: any,
@@ -87,10 +83,10 @@ async sendMessage(
       String(user._id),
       body.userId,
     );
-  }
+}
 
-  @Get('unread-counts')
+@Get('unread-counts')
   getUnreadCounts(@CurrentUser() user: UserDocument) {
     return this.messagingService.getUnreadCounts(String(user._id));
-  }
+}
 }

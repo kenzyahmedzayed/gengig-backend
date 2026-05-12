@@ -69,7 +69,7 @@ export class ChatService {
     });
   }
 
-  async sendMessage(
+async sendMessage(
     userId: string,
     sessionId: string,
     message: string,
@@ -121,16 +121,16 @@ export class ChatService {
       sessionId,
       userType,
     };
-  }
+}
 
-  async getHistory(userId: string, sessionId: string) {
+async getHistory(userId: string, sessionId: string) {
     return this.chatModel
       .find({ sessionId, userId })
       .sort({ createdAt: 1 })
       .exec();
-  }
+}
 
-  async getSessions(userId: string) {
+async getSessions(userId: string) {
     const sessions = await this.chatModel.aggregate([
       { $match: { userId: userId } },
       { $sort: { createdAt: -1 } },
@@ -143,12 +143,11 @@ export class ChatService {
         },
       },
     ]);
-
     return sessions;
-  }
+}
 
-  async deleteSession(userId: string, sessionId: string) {
+async deleteSession(userId: string, sessionId: string) {
     await this.chatModel.deleteMany({ sessionId, userId }).exec();
     return { message: 'Session deleted successfully' };
-  }
+}
 }

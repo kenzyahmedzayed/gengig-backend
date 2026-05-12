@@ -23,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         } else {
             this.logger.error('Unhandled exception', exception);
         }
-response.status(status).json({
+    response.status(status).json({
     statusCode: status, 
     message,
     timestamp: new Date().toISOString(),

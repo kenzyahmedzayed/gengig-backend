@@ -24,7 +24,7 @@ export class User {
   isEmailVerified!: boolean;
 
   @Prop({ enum: UserRole, default: UserRole.TEENLANCER })
-role!: UserRole;
+  role!: UserRole;
 
   @Prop({ select: false })
   verificationCode?: string;
@@ -35,9 +35,9 @@ role!: UserRole;
   photo?: string;
 
   @Prop({ type: Object, default: {} })
-notificationPreferences?: Record<string, boolean>;
+  notificationPreferences?: Record<string, boolean>;
 
-  // Teenlancer fields
+// Teenlancer fields
   @Prop()
   bio?: string;
 
@@ -56,7 +56,7 @@ notificationPreferences?: Record<string, boolean>;
   @Prop()
   rate?: number;
 
-  // Agent fields
+// Agent fields
   @Prop()
   company?: string;
 
@@ -70,27 +70,27 @@ notificationPreferences?: Record<string, boolean>;
   isOnboardingComplete?: boolean;
   
   @Prop({ type: [Object], default: [] })
-portfolio?: Array<{
+  portfolio?: Array<{
   title: string;
   category: string;
   img: string;
-}>;
-@Prop({ default: false })
-isPremium?: boolean;
+  }>;
 
-@Prop()
-premiumUntil?: Date;
+  @Prop({ default: false })
+  isPremium?: boolean;
 
-@Prop()
-premiumPlan?: string;
+  @Prop()
+  premiumUntil?: Date;
 
-@Prop({ type: Object })
-savedCard?: {
+  @Prop()
+  premiumPlan?: string;
+
+  @Prop({ type: Object })
+  savedCard?: {
   cardType: string;
   name: string;
   maskedNumber: string;
   expiry: string;
 };
 }
-
 export const UserSchema = SchemaFactory.createForClass(User);
