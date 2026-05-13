@@ -95,5 +95,11 @@ export class User {
   
   @Prop({ type: [String], default: [] })
   savedGigs?: string[];
+
+  @Prop({ default: 0 })
+  loginAttempts?: number;
+
+  @Prop()
+  lockUntil?: Date;
 }
 export const UserSchema = SchemaFactory.createForClass(User);

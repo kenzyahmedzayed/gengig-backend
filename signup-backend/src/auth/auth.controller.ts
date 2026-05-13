@@ -8,6 +8,7 @@ import type { UserDocument } from "../users/users.schema";
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forget-password.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 
 class ResendDto {
   @IsEmail()
@@ -49,10 +50,10 @@ class ChangePasswordDto {
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+@Throttle({ short: { limit: 3, ttl: 60000 } })
 @Post('register')
-@HttpCode(HttpStatus.CREATED)
-register(@Body() dto: RegisterDto) {
-  return this.authService.register(dto);
+async register(@Body() registerDto: RegisterDto) {
+  return this.authService.register(registerDto);
 }
 
 @Post('verify-email')
@@ -73,16 +74,16 @@ getProfile(@CurrentUser() user: UserDocument) {
   return this.authService.getProfile(String(user._id));
 }
 
+@Throttle({ short: { limit: 5, ttl: 60000 } })
 @Post('login')
-@HttpCode(HttpStatus.OK)
-async login(@Body() loginDto: LoginDto){
+async login(@Body() loginDto: LoginDto) {
   return this.authService.login(loginDto);
 }
 
+@Throttle({ short: { limit: 3, ttl: 60000 } })
 @Post('forgot-password')
-@HttpCode(HttpStatus.OK)
-async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
-  return this.authService.forgotPassword(forgotPasswordDto);
+async forgotPassword(@Body() dto: ForgotPasswordDto) {
+  return this.authService.forgotPassword(dto);
 }
 
 @Post('verify-reset-code')

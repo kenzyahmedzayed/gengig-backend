@@ -2,6 +2,8 @@ import 'dotenv/config';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
@@ -28,6 +30,30 @@ import { SupportModule } from './support/support.module';
           'mongodb+srv://gengig_db_user:gengig1004@cluster0.ijnyk5x.mongodb.net/gengig-backend?appName=Cluster0',
       }),
     }),
-    UsersModule, MailModule, AuthModule, GigsModule, ApplicationsModule, ChatModule, CommunityModule, ReviewsModule, NotificationsModule, PaymentsModule, SupportModule, ],
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000,
+        limit: 10, 
+      },
+      {
+        name: 'medium',
+        ttl: 60000,
+        limit: 100, 
+      },
+      {
+        name: 'long',
+        ttl: 3600000,
+        limit: 1000, 
+      },
+    ]),
+    UsersModule, MailModule, AuthModule, GigsModule, ApplicationsModule, ChatModule, CommunityModule, ReviewsModule, NotificationsModule, PaymentsModule, SupportModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
