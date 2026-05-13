@@ -35,6 +35,6 @@ export class CommunityPost {
   tags!: string[];
 
   @Prop({ type: [CommentSchema], default: [] })
-  comments!: Comment[];
+  comment!: Comment[];
 }
 export const CommunityPostSchema = SchemaFactory.createForClass(CommunityPost);

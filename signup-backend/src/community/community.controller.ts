@@ -57,7 +57,7 @@ export class CommunityController {
     return this.communityService.likePost(id, String(user._id));  
 }
 
-@Post('posts/:id/comments')
+@Post('posts/:id/comment')
 @UseGuards(JwtAuthGuard)
 @HttpCode(HttpStatus.CREATED)
   addComment(
@@ -73,9 +73,9 @@ export class CommunityController {
     );
 }
 
-@Get('posts/:id/comments')
-  getComments(@Param('id') id: string) {
-    return this.communityService.getComments(id);
+@Get('posts/:id/comment')
+  getComment(@Param('id') id: string) {
+    return this.communityService.getComment(id);
 }
   
 @Get('posts/:id')

@@ -279,16 +279,42 @@ async getSubmission(id: string): Promise<any> {
   const application = await this.applicationModel
     .findById(id)
     .populate('appliedBy', 'name photo')
-    .populate('gig', 'title budget')
+    .populate({
+      path: 'gig',
+      select: 'title budget postedBy',
+      populate: {
+        path: 'postedBy',
+        select: 'name photo',
+      },
+    })
     .exec();
 
   if (!application) throw new NotFoundException('Application not found');
+
+  const gig = application.gig as any;
+  const agent = gig?.postedBy as any;
 
   return {
     ...application.workSubmission,
     teenlancer: application.appliedBy,
     amount: application.paymentAmount,
     status: application.status,
+    gigTitle: gig?.title || 'Untitled Gig',
+    gig: gig
+      ? {
+          _id: gig._id,
+          title: gig.title || 'Untitled Gig',
+          budget: gig.budget || '',
+        }
+      : null,
+    agentName: agent?.name || 'Agent',
+    agent: agent
+      ? {
+          _id: agent._id,
+          name: agent.name || 'Agent',
+          photo: agent.photo || '',
+        }
+      : null,
   };
 }
 
