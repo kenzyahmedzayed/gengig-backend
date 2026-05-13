@@ -8,6 +8,7 @@ export enum ApplicationStatus {
   ACCEPTED = 'accepted',
   REJECTED = 'rejected',
   WORK_SUBMITTED = 'work_submitted',
+  REVISION_REQUESTED = 'revision_requested',
   COMPLETED = 'completed',
 }
 
@@ -52,6 +53,12 @@ export class Application {
 
   @Prop({ default: 0 })
   paymentAmount?: number;
+
+  @Prop({ default: 0 })
+  revisionCount?: number;
+
+  @Prop()
+  revisionReason?: string;
 }
 
 export const ApplicationSchema = SchemaFactory.createForClass(Application);

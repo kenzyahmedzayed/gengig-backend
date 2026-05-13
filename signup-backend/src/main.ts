@@ -7,14 +7,12 @@ import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
+import serverlessExpress from '@vendia/serverless-express';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    bodyParser: false,
-  });
-
+async function configureApp(app: any, enableWebSockets = true) {
   app.use(helmet.default());
-
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
@@ -23,9 +21,7 @@ async function bootstrap() {
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: false,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      transformOptions: { enableImplicitConversion: true },
     }),
   );
 
@@ -36,7 +32,9 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.useWebSocketAdapter(new IoAdapter(app));
+  if (enableWebSockets) {
+    app.useWebSocketAdapter(new IoAdapter(app));
+  }
 
   const config = new DocumentBuilder()
     .setTitle('Gengig API')
@@ -54,8 +52,12 @@ async function bootstrap() {
     )
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
+}
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  await configureApp(app);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
@@ -63,4 +65,23 @@ async function bootstrap() {
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+let cachedHandler: ReturnType<typeof serverlessExpress>;
+
+export const handler = async (req: any, res: any) => {
+  if (!cachedHandler) {
+    const expressApp = express();
+    const app = await NestFactory.create(
+      AppModule,
+      new ExpressAdapter(expressApp),
+      { bodyParser: false },
+    );
+    await configureApp(app, false);
+    await app.init();
+    cachedHandler = serverlessExpress({ app: expressApp });
+  }
+  return cachedHandler(req, res);
+};
+
+if (process.env.VERCEL !== '1') {
+  bootstrap();
+}
