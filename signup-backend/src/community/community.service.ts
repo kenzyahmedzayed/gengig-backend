@@ -100,7 +100,12 @@ async addComment(postId: string, userId: string, role: string, dto: any): Promis
   if (!postId || postId === 'undefined') {
     throw new BadRequestException('Invalid post ID');
   }
-  const content = dto.content || dto.text || dto.comment || '';
+  const content = dto.content || dto.text || dto.comment || dto.message || '';
+
+  if (!content) {
+    throw new BadRequestException('Comment content is required');
+  }
+
   const post = await this.postModel
     .findByIdAndUpdate(
       postId,
@@ -120,12 +125,25 @@ async addComment(postId: string, userId: string, role: string, dto: any): Promis
 
   if (!post) throw new NotFoundException('Post not found');
 
+  const newComment = post.comments[post.comments.length - 1];
+
   return {
-    _id: post._id,
-    commentsCount: post.comments.length,
+    // Return all 3 formats so frontend can handle any
+    comment: {
+      _id: (newComment as any)._id,
+      content: (newComment as any).content,
+      text: (newComment as any).content,
+      author: {
+        _id: (newComment.author as any)?._id,
+        name: (newComment.author as any)?.name || 'Unknown',
+        photo: (newComment.author as any)?.photo || '',
+      },
+      createdAt: (newComment as any).createdAt,
+    },
     comments: post.comments.map(c => ({
       _id: (c as any)._id,
       content: c.content,
+      text: c.content,
       author: {
         _id: (c.author as any)?._id,
         name: (c.author as any)?.name || 'Unknown',
@@ -133,6 +151,7 @@ async addComment(postId: string, userId: string, role: string, dto: any): Promis
       },
       createdAt: (c as any).createdAt,
     })),
+    commentsCount: post.comments.length,
   };
 }
   

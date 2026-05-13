@@ -6,6 +6,7 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 import { Gig, GigDocument } from '../gigs/gig.schema';
 import { Notification, NotificationDocument } from '../notifications/notification.schema';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Review, ReviewDocument } from '../reviews/review.schema';
 
 @Injectable()
 export class ApplicationsService {
@@ -17,6 +18,8 @@ export class ApplicationsService {
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
     private readonly notificationsService: NotificationsService,
+    @InjectModel(Review.name)
+    private readonly reviewModel: Model<ReviewDocument>,
   ) {}
 
 async apply(
@@ -350,13 +353,22 @@ async reviewTeenlancer(id: string, agentId: string, body: { stars: number; text:
 
   if (!application) throw new NotFoundException('Application not found');
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'new_review',
-    title: 'New Review! ⭐',
-    message: `You received a ${body.stars}-star review!`,
-    isRead: false,
+  const gig = application.gig as any;
+
+  await this.reviewModel.create({
+    reviewer: agentId,
+    teenlancer: application.appliedBy,
+    gig: gig._id,
+    rating: body.stars,
+    comment: body.text || '',
   });
+
+  await this.notificationsService.create(
+    String(application.appliedBy),
+    'New Review! ⭐',
+    `You received a ${body.stars}-star review!`,
+    'new_review',
+  );
 
   return { success: true, message: 'Review submitted' };
 }
