@@ -7,11 +7,20 @@ import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
+import serverlessExpress from '@vendia/serverless-express';
+
+const expressApp = express();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create(
+  AppModule,
+  new ExpressAdapter(expressApp),
+  {
     bodyParser: false,
-  });
+  },
+);
 
   app.use(helmet.default());
 
@@ -57,10 +66,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`Server running at http://localhost:${port}`);
-  console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
+export const handler = serverlessExpress({
+  app: expressApp,
+});
 
 bootstrap();
