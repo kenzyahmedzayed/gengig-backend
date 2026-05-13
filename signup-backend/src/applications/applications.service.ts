@@ -6,6 +6,7 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 import { Gig, GigDocument } from '../gigs/gig.schema';
 import { Notification, NotificationDocument } from '../notifications/notification.schema';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Review, ReviewDocument } from '../reviews/review.schema';
 
 @Injectable()
 export class ApplicationsService {
@@ -17,6 +18,8 @@ export class ApplicationsService {
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
     private readonly notificationsService: NotificationsService,
+    @InjectModel(Review.name)
+    private readonly reviewModel: Model<ReviewDocument>,
   ) {}
 
 async apply(
@@ -276,16 +279,42 @@ async getSubmission(id: string): Promise<any> {
   const application = await this.applicationModel
     .findById(id)
     .populate('appliedBy', 'name photo')
-    .populate('gig', 'title budget')
+    .populate({
+      path: 'gig',
+      select: 'title budget postedBy',
+      populate: {
+        path: 'postedBy',
+        select: 'name photo',
+      },
+    })
     .exec();
 
   if (!application) throw new NotFoundException('Application not found');
+
+  const gig = application.gig as any;
+  const agent = gig?.postedBy as any;
 
   return {
     ...application.workSubmission,
     teenlancer: application.appliedBy,
     amount: application.paymentAmount,
     status: application.status,
+    gigTitle: gig?.title || 'Untitled Gig',
+    gig: gig
+      ? {
+          _id: gig._id,
+          title: gig.title || 'Untitled Gig',
+          budget: gig.budget || '',
+        }
+      : null,
+    agentName: agent?.name || 'Agent',
+    agent: agent
+      ? {
+          _id: agent._id,
+          name: agent.name || 'Agent',
+          photo: agent.photo || '',
+        }
+      : null,
   };
 }
 
@@ -350,13 +379,22 @@ async reviewTeenlancer(id: string, agentId: string, body: { stars: number; text:
 
   if (!application) throw new NotFoundException('Application not found');
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'new_review',
-    title: 'New Review! ⭐',
-    message: `You received a ${body.stars}-star review!`,
-    isRead: false,
+  const gig = application.gig as any;
+
+  await this.reviewModel.create({
+    reviewer: agentId,
+    teenlancer: application.appliedBy,
+    gig: gig._id,
+    rating: body.stars,
+    comment: body.text || '',
   });
+
+  await this.notificationsService.create(
+    String(application.appliedBy),
+    'New Review! ⭐',
+    `You received a ${body.stars}-star review!`,
+    'new_review',
+  );
 
   return { success: true, message: 'Review submitted' };
 }

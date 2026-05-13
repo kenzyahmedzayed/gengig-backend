@@ -6,6 +6,7 @@ import { Application, ApplicationSchema } from './application.schema';
 import { Gig, GigSchema } from '../gigs/gig.schema';
 import { Notification, NotificationSchema } from '../notifications/notification.schema';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { Review, ReviewSchema } from '../reviews/review.schema';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       { name: Application.name, schema: ApplicationSchema },
       { name: Gig.name, schema: GigSchema },
       { name: Notification.name, schema: NotificationSchema },
+      { name: Review.name, schema: ReviewSchema },
     ]),
     NotificationsModule,
   ],

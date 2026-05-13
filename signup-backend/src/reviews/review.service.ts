@@ -41,13 +41,25 @@ async create(
     return review.save();
 }
 
-async getTeenlancerReviews(teenlancerId: string): Promise<ReviewDocument[]> {
-    return this.reviewModel
-      .find({ teenlancer: teenlancerId })
-      .populate('reviewer', 'name photo company')
-      .populate('gig', 'title')
-      .sort({ createdAt: -1 })
-      .exec();
+async getTeenlancerReviews(teenlancerId: string): Promise<any[]> {
+  const reviews = await this.reviewModel
+    .find({ teenlancer: teenlancerId })
+    .populate('reviewer', 'name photo company')
+    .populate('gig', 'title')
+    .sort({ createdAt: -1 })
+    .exec();
+
+  return reviews.map(review => ({
+    id: review._id,
+    name: (review.reviewer as any)?.name || 'Unknown',
+    img: (review.reviewer as any)?.photo || '',
+    role: 'Agent',
+    company: (review.reviewer as any)?.company || '',
+    stars: review.rating,
+    text: review.comment,
+    gigTitle: (review.gig as any)?.title || '',
+    createdAt: (review as any).createdAt,
+  }));
 }
 
 async getAgentReviews(agentId: string): Promise<ReviewDocument[]> {

@@ -10,11 +10,32 @@ export class CommunityService {
     private readonly postModel: Model<CommunityPostDocument>,
   ) {}
 
+private formatComment(c: any) {
+  const author = c.author as any;
+
+  return {
+    _id: c._id,
+    content: c.content,
+    text: c.content,
+    author: {
+      _id: author?._id,
+      name: author?.name || 'Unknown',
+      photo: author?.photo || '',
+    },
+    user: {
+      id: author?._id ? String(author._id) : undefined,
+      name: author?.name || 'Unknown',
+      img: author?.photo || '',
+    },
+    createdAt: c.createdAt,
+  };
+}
+
 async findAll(): Promise<any[]> {
     const posts = await this.postModel
       .find()
       .populate('author', 'name photo role')
-      .populate('comments.author', 'name photo')
+      .populate('comment.author', 'name photo')
       .sort({ createdAt: -1 })
       .exec();
 
@@ -27,17 +48,10 @@ async findAll(): Promise<any[]> {
         image: post.image,
         likes: post.likes || [],
         likesCount: (post.likes || []).length,
-        comments: (post.comments || []).map(c => ({
-          _id: (c as any)._id,
-          content: c.content,
-          author: {
-            _id: (c.author as any)?._id,
-            name: (c.author as any)?.name || 'Unknown',
-            photo: (c.author as any)?.photo || '',
-          },
-          createdAt: (c as any).createdAt,
-        })),
-        commentsCount: (post.comments || []).length,
+        comments: (post.comment || []).map(c => this.formatComment(c)),
+        comment: (post.comment || []).map(c => this.formatComment(c)),
+        commentsCount: (post.comment || []).length,
+        commentCount: (post.comment || []).length,
         createdAt: (post as any).createdAt,
         user: {
           id: String((post.author as any)._id),
@@ -64,10 +78,32 @@ async create(userId: string, role: string, data: any): Promise<any> {
     tags,
     image: data.image || '',
     likes: [],
-    comments: [],
+    comment: [],
   });
 
-  return post.populate('author', 'name photo role');
+  const populatedPost = await post.populate('author', 'name photo role');
+  const author = populatedPost.author as any;
+
+  return {
+    _id: populatedPost._id,
+    content: populatedPost.content,
+    tags: populatedPost.tags || [],
+    image: populatedPost.image,
+    likes: populatedPost.likes || [],
+    likesCount: 0,
+    comments: [],
+    comment: [],
+    commentsCount: 0,
+    commentCount: 0,
+    createdAt: (populatedPost as any).createdAt,
+    user: {
+      id: String(author._id),
+      name: author.name || 'Unknown',
+      photo: author.photo || '',
+      img: author.photo || '',
+      role: author.role || 'teenlancer',
+    },
+  };
 }
 
 async likePost(postId: string, userId: string): Promise<any> {
@@ -100,60 +136,53 @@ async addComment(postId: string, userId: string, role: string, dto: any): Promis
   if (!postId || postId === 'undefined') {
     throw new BadRequestException('Invalid post ID');
   }
-  const content = dto.content || dto.text || dto.comment || '';
+  const content = dto.content || dto.text || dto.comment || dto.message || '';
+
+  if (!content) {
+    throw new BadRequestException('Comment content is required');
+  }
+
   const post = await this.postModel
     .findByIdAndUpdate(
       postId,
       {
         $push: {
-          comments: {
+          comment: {
             author: userId,
             content,
             createdAt: new Date(),
           },
         },
       },
-      { new: true },
+      { returnDocument: 'after' },
     )
-    .populate('comments.author', 'name photo')
+    .populate('comment.author', 'name photo')
     .exec();
 
   if (!post) throw new NotFoundException('Post not found');
 
+  const newComment = post.comment[post.comment.length - 1];
+  const formattedComments = post.comment.map(c => this.formatComment(c));
+  const formattedNewComment = this.formatComment(newComment);
+
   return {
-    _id: post._id,
-    commentsCount: post.comments.length,
-    comments: post.comments.map(c => ({
-      _id: (c as any)._id,
-      content: c.content,
-      author: {
-        _id: (c.author as any)?._id,
-        name: (c.author as any)?.name || 'Unknown',
-        photo: (c.author as any)?.photo || '',
-      },
-      createdAt: (c as any).createdAt,
-    })),
+    newComment: formattedNewComment,
+    comment: formattedNewComment,
+    comments: formattedComments,
+    commentsCount: post.comment.length,
+    commentCount: post.comment.length,
   };
 }
   
-async getComments(postId: string): Promise<any> {
+async getComment(postId: string): Promise<any> {
     const post = await this.postModel
       .findById(postId)
-      .populate('comments.author', 'name photo')
+      .populate('comment.author', 'name photo')
       .exec();
 
     if (!post) throw new NotFoundException('Post not found');
 
-    return post.comments.map(c => ({
-      _id: (c as any)._id,
-      content: c.content,
-      author: {
-        _id: (c.author as any)?._id,
-        name: (c.author as any)?.name || 'Unknown',
-        photo: (c.author as any)?.photo || '',
-      },
-      createdAt: (c as any).createdAt,
-    }));
+    return post.comment.map(c => this.formatComment(c));
 }
 
 async getActiveMembers() {
@@ -205,7 +234,7 @@ async findOne(postId: string): Promise<any> {
   const post = await this.postModel
     .findById(postId)
     .populate('author', 'name photo role')
-    .populate('comments.author', 'name photo')
+    .populate('comment.author', 'name photo')
     .exec();
 
   if (!post) throw new NotFoundException('Post not found');
@@ -217,17 +246,10 @@ async findOne(postId: string): Promise<any> {
     image: post.image,
     likes: post.likes || [],
     likesCount: (post.likes || []).length,
-    comments: (post.comments || []).map(c => ({
-      _id: (c as any)._id,
-      content: c.content,
-      author: {
-        _id: (c.author as any)?._id,
-        name: (c.author as any)?.name || 'Unknown',
-        photo: (c.author as any)?.photo || '',
-      },
-      createdAt: (c as any).createdAt,
-    })),
-    commentsCount: (post.comments || []).length,
+    comments: (post.comment || []).map(c => this.formatComment(c)),
+    comment: (post.comment || []).map(c => this.formatComment(c)),
+    commentsCount: (post.comment || []).length,
+    commentCount: (post.comment || []).length,
     createdAt: (post as any).createdAt,
     user: {
       id: String((post.author as any)._id),
