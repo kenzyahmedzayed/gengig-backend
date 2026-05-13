@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json, urlencoded } from 'express';
+import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
@@ -12,13 +13,21 @@ async function bootstrap() {
     bodyParser: false,
   });
 
+  // Security headers
+  app.use(helmet.default());
+
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
+  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      forbidNonWhitelisted: false,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     }),
   );
 
@@ -55,4 +64,5 @@ async function bootstrap() {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
+
 bootstrap();

@@ -98,7 +98,7 @@ export class ApplicationsController {
   return this.applicationsService.reject(id, String(user._id));
 }
 
-  @Post('applications/:id/submit-work')
+  @Post('applications/:id/submitwork')
   @HttpCode(HttpStatus.OK)
   submitWork(
   @Param('id') id: string,

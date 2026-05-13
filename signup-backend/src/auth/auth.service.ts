@@ -179,14 +179,51 @@ private async generateAccessToken(user: UserDocument): Promise<string> {
 async login(loginDto: LoginDto) {
   const { email, password } = loginDto;
   const user = await this.usersService.findByEmailWithPassword(email);
+  
   if (!user) {
     throw new UnauthorizedException('Invalid email or password');
   }
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    throw new UnauthorizedException('Invalid email or password');
+
+  if (user.lockUntil && user.lockUntil > new Date()) {
+    const minutesLeft = Math.ceil(
+      (user.lockUntil.getTime() - Date.now()) / 60000
+    );
+    throw new UnauthorizedException(
+      `Account locked. Try again in ${minutesLeft} minute(s)`
+    );
   }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  
+  if (!isPasswordValid) {
+    const attempts = (user.loginAttempts || 0) + 1;
+    
+    if (attempts >= 5) {
+      await this.usersService.updateById(String(user._id), {
+        loginAttempts: attempts,
+        lockUntil: new Date(Date.now() + 15 * 60 * 1000),
+      });
+      throw new UnauthorizedException(
+        'Account locked for 15 minutes due to too many failed attempts'
+      );
+    }
+
+    await this.usersService.updateById(String(user._id), {
+      loginAttempts: attempts,
+    });
+
+    throw new UnauthorizedException(
+      `Invalid email or password. ${5 - attempts} attempts remaining`
+    );
+  }
+
+  await this.usersService.updateById(String(user._id), {
+    loginAttempts: 0,
+    lockUntil: undefined,
+  });
+
   const fullUser = await this.usersService.findById(String(user._id));
+
   const token = await this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
@@ -194,6 +231,7 @@ async login(loginDto: LoginDto) {
       expiresIn: '7d',
     },
   );
+
   return {
     message: 'Login Successful',
     token,
@@ -206,7 +244,6 @@ async login(loginDto: LoginDto) {
     skills: fullUser?.skills || [],
     hourlyRate: fullUser?.rate || 0,
     availability: fullUser?.availability || '',
-    location: '',
     company: fullUser?.company || '',
     industry: fullUser?.industry || '',
     user: {
