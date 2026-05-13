@@ -115,6 +115,10 @@ async findByTeenlancer(teenlancerId: string): Promise<any[]> {
     gigBudget: (app.gig as any)?.budget || '',
     gigStatus: (app.gig as any)?.status || '',
     gigId: (app.gig as any)?._id,
+    revisionCount: app.revisionCount || 0,
+    revisionReason: app.revisionReason || '',
+    workSubmission: app.workSubmission || null,
+    paymentStatus: app.paymentStatus || 'pending',
   }));
 }
 
@@ -242,7 +246,7 @@ async getAgentDashboard(userId: string): Promise<any> {
         thisMonth: 0,
       },
     };
-  }
+}
 
 async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
   const application = await this.applicationModel
@@ -251,6 +255,8 @@ async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
     .exec();
 
   if (!application) throw new NotFoundException('Application not found');
+
+  const isRevision = body.isRevision === 'true' || body.isRevision === true;
 
   application.status = ApplicationStatus.WORK_SUBMITTED;
   application.workSubmission = {
@@ -265,56 +271,40 @@ async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
   await application.save();
 
   const gig = application.gig as any;
+
   await this.notificationsService.create(
-  String(gig.postedBy),
-  'Work Submitted! 📦',
-  `A teenlancer submitted work for "${gig.title}". Please review it.`,
-  'general',
+    String(gig.postedBy),
+    isRevision ? 'Revision Submitted! 🔄' : 'Work Submitted! 📦',
+    isRevision 
+      ? `Teenlancer submitted a revision for "${gig.title}" (Revision #${application.revisionCount})`
+      : `A teenlancer submitted work for "${gig.title}". Please review it.`,
+    'general',
   );
 
-  return { success: true, message: 'Work submitted successfully' };
+  return { 
+    success: true, 
+    message: isRevision ? 'Revision submitted successfully' : 'Work submitted successfully',
+    revisionCount: application.revisionCount || 0,
+  };
 }
 
 async getSubmission(id: string): Promise<any> {
   const application = await this.applicationModel
     .findById(id)
     .populate('appliedBy', 'name photo')
-    .populate({
-      path: 'gig',
-      select: 'title budget postedBy',
-      populate: {
-        path: 'postedBy',
-        select: 'name photo',
-      },
-    })
+    .populate('gig', 'title budget')
     .exec();
 
   if (!application) throw new NotFoundException('Application not found');
-
-  const gig = application.gig as any;
-  const agent = gig?.postedBy as any;
 
   return {
     ...application.workSubmission,
     teenlancer: application.appliedBy,
     amount: application.paymentAmount,
     status: application.status,
-    gigTitle: gig?.title || 'Untitled Gig',
-    gig: gig
-      ? {
-          _id: gig._id,
-          title: gig.title || 'Untitled Gig',
-          budget: gig.budget || '',
-        }
-      : null,
-    agentName: agent?.name || 'Agent',
-    agent: agent
-      ? {
-          _id: agent._id,
-          name: agent.name || 'Agent',
-          photo: agent.photo || '',
-        }
-      : null,
+    revisionCount: application.revisionCount || 0,
+    revisionReason: application.revisionReason || '',
+    gigTitle: (application.gig as any)?.title || '',
   };
 }
 
@@ -356,19 +346,27 @@ async rejectWork(id: string, agentId: string, reason: string): Promise<any> {
   if (!application) throw new NotFoundException('Application not found');
 
   const gig = application.gig as any;
+  if (String(gig.postedBy) !== agentId) {
+    throw new ForbiddenException('Not authorized');
+  }
 
-  application.status = ApplicationStatus.ACCEPTED;
+  application.status = ApplicationStatus.REVISION_REQUESTED;
+  application.revisionReason = reason;
+  application.revisionCount = (application.revisionCount || 0) + 1;
   await application.save();
 
-  await this.notificationModel.create({
-    userId: application.appliedBy,
-    type: 'general',
-    title: 'Revision Requested 🔄',
-    message: `Agent requested revision for "${gig.title}": ${reason}`,
-    isRead: false,
-  });
+  await this.notificationsService.create(
+    String(application.appliedBy),
+    'Revision Requested 🔄',
+    `Agent requested revision for "${gig.title}": ${reason}`,
+    'general',
+  );
 
-  return { success: true, message: 'Revision requested' };
+  return { 
+    success: true, 
+    message: 'Revision requested',
+    revisionCount: application.revisionCount,
+  };
 }
 
 async reviewTeenlancer(id: string, agentId: string, body: { stars: number; text: string }): Promise<any> {
