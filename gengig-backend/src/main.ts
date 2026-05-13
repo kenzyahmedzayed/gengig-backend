@@ -24,6 +24,8 @@ async function bootstrap() {
 
   app.use(helmet.default());
 
+  app.use(helmet.default());
+
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
