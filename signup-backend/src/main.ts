@@ -13,13 +13,11 @@ async function bootstrap() {
     bodyParser: false,
   });
 
-  // Security headers
   app.use(helmet.default());
 
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
-  // Validation
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

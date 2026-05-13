@@ -201,10 +201,10 @@ async login(loginDto: LoginDto) {
     if (attempts >= 5) {
       await this.usersService.updateById(String(user._id), {
         loginAttempts: attempts,
-        lockUntil: new Date(Date.now() + 15 * 60 * 1000),
+        lockUntil: new Date(Date.now() + 3 * 60 * 1000),
       });
       throw new UnauthorizedException(
-        'Account locked for 15 minutes due to too many failed attempts'
+        'Account locked for 3 minutes due to too many failed attempts'
       );
     }
 
