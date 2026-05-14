@@ -65,7 +65,7 @@ export class ChatService {
     private readonly configService: ConfigService,
   ) {
     this.groq = new Groq({
-      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
+      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
     });
   }
 
