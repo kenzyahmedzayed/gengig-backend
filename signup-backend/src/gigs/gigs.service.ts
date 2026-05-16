@@ -86,19 +86,20 @@ async findById(id: string, userId?: string): Promise<any> {
 
   const gig = await this.gigModel
     .findById(id)
-    .populate('postedBy', 'name photo company')
+    .populate('postedBy', 'name photo company industry') 
     .exec();
 
   if (!gig) throw new NotFoundException('Gig not found');
 
   const gigObj = gig.toObject() as any;
-  
+
   if (userId) {
     const savedBy = gig.savedBy || [];
-    gigObj.isSaved = savedBy.some(id => id.toString() === userId);
+    gigObj.isSaved = savedBy.some((id: any) => id.toString() === userId);
   } else {
     gigObj.isSaved = false;
   }
+
   return gigObj;
 }
 
