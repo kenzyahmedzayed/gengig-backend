@@ -252,6 +252,7 @@ async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
   const application = await this.applicationModel
     .findById(id)
     .populate('gig')
+    .populate('appliedBy', 'name photo')
     .exec();
 
   if (!application) throw new NotFoundException('Application not found');
@@ -271,20 +272,22 @@ async submitWork(id: string, teenlancerId: string, body: any): Promise<any> {
   await application.save();
 
   const gig = application.gig as any;
+  const teenlancerName = (application.appliedBy as any)?.name || 'A Teenlancer';
 
   await this.notificationsService.create(
     String(gig.postedBy),
     isRevision ? 'Revision Submitted! 🔄' : 'Work Submitted! 📦',
-    isRevision 
-      ? `Teenlancer submitted a revision for "${gig.title}" (Revision #${application.revisionCount})`
-      : `A teenlancer submitted work for "${gig.title}". Please review it.`,
+    isRevision
+      ? `${teenlancerName} submitted a revision for "${gig.title}" (Revision #${application.revisionCount})`
+      : `${teenlancerName} submitted work for "${gig.title}". Please review it.`,
     'general',
   );
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     message: isRevision ? 'Revision submitted successfully' : 'Work submitted successfully',
     revisionCount: application.revisionCount || 0,
+    teenlancerName,
   };
 }
 
