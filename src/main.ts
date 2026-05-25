@@ -6,10 +6,12 @@ import { json, urlencoded } from 'express';
 import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
+import serverlessExpress from '@vendia/serverless-express';
 
-async function configureApp(app: any) {
+async function configureApp(app: any, enableWebSockets = true) {
   app.use(helmet.default());
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
@@ -29,6 +31,10 @@ async function configureApp(app: any) {
     origin: ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
   });
+
+  if (enableWebSockets) {
+    app.useWebSocketAdapter(new IoAdapter(app));
+  }
 
   const config = new DocumentBuilder()
     .setTitle('Gengig API')
@@ -59,20 +65,21 @@ async function bootstrap() {
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
 
-let cachedApp: ReturnType<typeof express>;
+let cachedHandler: ReturnType<typeof serverlessExpress>;
 
 export const handler = async (req: any, res: any) => {
-  if (!cachedApp) {
-    cachedApp = express();
+  if (!cachedHandler) {
+    const expressApp = express();
     const app = await NestFactory.create(
       AppModule,
-      new ExpressAdapter(cachedApp),
+      new ExpressAdapter(expressApp),
       { bodyParser: false },
     );
-    await configureApp(app);
+    await configureApp(app, false);
     await app.init();
+    cachedHandler = serverlessExpress({ app: expressApp });
   }
-  return cachedApp(req, res);
+  return cachedHandler(req, res);
 };
 
 if (process.env.VERCEL !== '1') {
