@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import dns from 'node:dns';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -7,6 +8,8 @@ import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+
+dns.setDefaultResultOrder('ipv4first');
 
 async function configureApp(app: any, enableWebSockets = true) {
   app.use(helmet.default());
@@ -68,4 +71,7 @@ async function bootstrap() {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Bootstrap failed:', error);
+  process.exit(1);
+});

@@ -25,12 +25,18 @@ import { SupportModule } from './support/support.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const uri = configService.get<string>('MONGO_URI');
+        const uri =
+          configService.get<string>('MONGO_URI_DIRECT') ||
+          configService.get<string>('MONGO_URI');
         if (!uri) {
           throw new Error('MONGO_URI is required');
         }
 
-        return { uri };
+        return {
+          uri,
+          serverSelectionTimeoutMS: 10000,
+          connectTimeoutMS: 10000,
+        };
       },
     }),
     ThrottlerModule.forRoot([
