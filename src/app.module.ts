@@ -24,11 +24,14 @@ import { SupportModule } from './support/support.module';
     }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        uri:
-          configService.get<string>('MONGO_URI') ||
-          'mongodb+srv://gengig_db_user:gengig1004@cluster0.ijnyk5x.mongodb.net/gengig-backend?appName=Cluster0',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const uri = configService.get<string>('MONGO_URI');
+        if (!uri) {
+          throw new Error('MONGO_URI is required');
+        }
+
+        return { uri };
+      },
     }),
     ThrottlerModule.forRoot([
       {

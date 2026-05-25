@@ -27,8 +27,15 @@ async function configureApp(app: any, enableWebSockets = true) {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  const corsOrigins = (
+    process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    origin: corsOrigins,
     credentials: true,
   });
 

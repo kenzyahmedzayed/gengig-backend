@@ -64,8 +64,13 @@ export class ChatService {
     private readonly chatModel: Model<ChatMessageDocument>,
     private readonly configService: ConfigService,
   ) {
+    const groqApiKey = this.configService.get<string>('GROQ_API_KEY');
+    if (!groqApiKey) {
+      throw new Error('GROQ_API_KEY is required');
+    }
+
     this.groq = new Groq({
-      apiKey: this.configService.get<string>('GROQ_API_KEY') || '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',
+      apiKey: groqApiKey,
     });
   }
 

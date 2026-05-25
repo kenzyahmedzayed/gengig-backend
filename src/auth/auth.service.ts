@@ -12,12 +12,20 @@ import { UserRole } from '../users/users.schema';
 
 @Injectable()
 export class AuthService {
+  private readonly jwtSecret: string;
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailService: MailService,
-  ) {}
+  ) {
+    const jwtSecret = this.config.get<string>('JWT_ACCESS_SECRET');
+    if (!jwtSecret) {
+      throw new Error('JWT_ACCESS_SECRET is required');
+    }
+    this.jwtSecret = jwtSecret;
+  }
 
 async register(dto: RegisterDto) {
   const existing = await this.usersService.findByEmail(dto.email);
@@ -170,7 +178,7 @@ private async generateAccessToken(user: UserDocument): Promise<string> {
   return this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
-      secret: this.config.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+      secret: this.jwtSecret,
       expiresIn: '7d',
     },
   );
@@ -227,7 +235,7 @@ async login(loginDto: LoginDto) {
   const token = await this.jwtService.signAsync(
     { sub: String(user._id), email: user.email },
     {
-      secret: this.config.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+      secret: this.jwtSecret,
       expiresIn: '7d',
     },
   );

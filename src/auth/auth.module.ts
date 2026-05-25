@@ -15,10 +15,13 @@ import { GoogleStrategy } from './strategies/google.strategy';
             useFactory: (configService: ConfigService) => {
                 const expiresIn =
                   configService.get<string>('JWT_ACCESS_EXPIRES_IN') || '7d';
+                const secret = configService.get<string>('JWT_ACCESS_SECRET');
+                if (!secret) {
+                  throw new Error('JWT_ACCESS_SECRET is required');
+                }
 
                 return {
-                    secret:
-                      configService.get<string>('JWT_ACCESS_SECRET') || 'mysecretkey123',
+                    secret,
                     signOptions: {
                       expiresIn: expiresIn as any,
                     },
