@@ -5,13 +5,16 @@ import * as nodemailer from 'nodemailer';
 @Injectable()
 export class MailService {
   private readonly logger = new Logger(MailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter: nodemailer.Transporter | null = null;
 
   constructor(private readonly config: ConfigService) {
     const user = this.config.get<string>('MAIL_USER');
     const pass = this.config.get<string>('MAIL_PASS');
     if (!user || !pass) {
-      throw new Error('MAIL_USER and MAIL_PASS are required');
+      this.logger.warn(
+        'MAIL_USER or MAIL_PASS is missing. Email sending is disabled.',
+      );
+      return;
     }
 
     this.transporter = nodemailer.createTransport({
@@ -33,6 +36,11 @@ async sendVerificationEmail(
   ): Promise<void> {
 
     try {
+      if (!this.transporter) {
+        this.logger.warn('Email transporter is not configured.');
+        return;
+      }
+
       const info = await this.transporter.sendMail({
         from: this.config.get<string>('MAIL_FROM') || this.config.get('MAIL_USER'),
         to: toEmail,

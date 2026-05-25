@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -57,7 +57,7 @@ Keep responses concise and to the point.
 
 @Injectable()
 export class ChatService {
-  private groq: Groq;
+  private groq: Groq | null = null;
 
   constructor(
     @InjectModel(ChatMessage.name)
@@ -65,13 +65,11 @@ export class ChatService {
     private readonly configService: ConfigService,
   ) {
     const groqApiKey = this.configService.get<string>('GROQ_API_KEY');
-    if (!groqApiKey) {
-      throw new Error('GROQ_API_KEY is required');
+    if (groqApiKey) {
+      this.groq = new Groq({
+        apiKey: groqApiKey,
+      });
     }
-
-    this.groq = new Groq({
-      apiKey: groqApiKey,
-    });
   }
 
 async sendMessage(
@@ -80,6 +78,12 @@ async sendMessage(
     message: string,
     userType: 'teenlancer' | 'agent',
   ) {
+    if (!this.groq) {
+      throw new ServiceUnavailableException(
+        'Chat service is not configured',
+      );
+    }
+
     await this.chatModel.create({
       sessionId,
       userId,
