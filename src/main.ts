@@ -7,8 +7,6 @@ import * as helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import express, { type Request, type Response } from 'express';
 
 async function configureApp(app: any, enableWebSockets = true) {
   app.use(helmet.default());
@@ -70,33 +68,4 @@ async function bootstrap() {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
-
-let cachedExpressApp: ReturnType<typeof express> | null = null;
-
-export const handler = async (req: any, res: any) => {
-  try {
-    if (!cachedExpressApp) {
-      const expressApp = express();
-      const app = await NestFactory.create(
-        AppModule,
-        new ExpressAdapter(expressApp),
-        { bodyParser: false },
-      );
-      await configureApp(app, false);
-      await app.init();
-      cachedExpressApp = expressApp;
-    }
-    return cachedExpressApp(req as Request, res as Response);
-  } catch (error: any) {
-    const message = error?.message || 'Unknown server initialization error';
-    console.error('Vercel handler bootstrap error:', error);
-    return res.status(500).json({
-      message: 'Server initialization failed',
-      error: message,
-    });
-  }
-};
-
-if (process.env.VERCEL !== '1') {
-  bootstrap();
-}
+bootstrap();
