@@ -74,18 +74,27 @@ async function bootstrap() {
 let cachedExpressApp: ReturnType<typeof express> | null = null;
 
 export const handler = async (req: any, res: any) => {
-  if (!cachedExpressApp) {
-    const expressApp = express();
-    const app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(expressApp),
-      { bodyParser: false },
-    );
-    await configureApp(app, false);
-    await app.init();
-    cachedExpressApp = expressApp;
+  try {
+    if (!cachedExpressApp) {
+      const expressApp = express();
+      const app = await NestFactory.create(
+        AppModule,
+        new ExpressAdapter(expressApp),
+        { bodyParser: false },
+      );
+      await configureApp(app, false);
+      await app.init();
+      cachedExpressApp = expressApp;
+    }
+    return cachedExpressApp(req as Request, res as Response);
+  } catch (error: any) {
+    const message = error?.message || 'Unknown server initialization error';
+    console.error('Vercel handler bootstrap error:', error);
+    return res.status(500).json({
+      message: 'Server initialization failed',
+      error: message,
+    });
   }
-  return cachedExpressApp(req as Request, res as Response);
 };
 
 if (process.env.VERCEL !== '1') {
