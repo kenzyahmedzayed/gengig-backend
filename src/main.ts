@@ -8,8 +8,7 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
-import serverlessExpress from '@vendia/serverless-express';
+import express, { type Request, type Response } from 'express';
 
 async function configureApp(app: any, enableWebSockets = true) {
   app.use(helmet.default());
@@ -72,10 +71,10 @@ async function bootstrap() {
   console.log(`Swagger docs at http://localhost:${port}/api/docs`);
 }
 
-let cachedHandler: ReturnType<typeof serverlessExpress>;
+let cachedExpressApp: ReturnType<typeof express> | null = null;
 
 export const handler = async (req: any, res: any) => {
-  if (!cachedHandler) {
+  if (!cachedExpressApp) {
     const expressApp = express();
     const app = await NestFactory.create(
       AppModule,
@@ -84,9 +83,9 @@ export const handler = async (req: any, res: any) => {
     );
     await configureApp(app, false);
     await app.init();
-    cachedHandler = serverlessExpress({ app: expressApp });
+    cachedExpressApp = expressApp;
   }
-  return cachedHandler(req, res);
+  return cachedExpressApp(req as Request, res as Response);
 };
 
 if (process.env.VERCEL !== '1') {
