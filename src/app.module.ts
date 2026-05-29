@@ -15,6 +15,8 @@ import { ReviewsModule } from './reviews/review.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentsModule } from './payments/payments.module';
 import { SupportModule } from './support/support.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -58,7 +60,9 @@ import { SupportModule } from './support/support.module';
     ]),
     UsersModule, MailModule, AuthModule, GigsModule, ApplicationsModule, ChatModule, CommunityModule, ReviewsModule, NotificationsModule, PaymentsModule, SupportModule,
   ],
+  controllers: [AppController],
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
