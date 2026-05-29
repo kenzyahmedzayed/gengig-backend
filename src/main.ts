@@ -128,9 +128,14 @@ export const handler = async (req: any, res: any) => {
   }
 };
 
-if (process.env.VERCEL !== '1') {
+const isVercelRuntime =
+  process.env.VERCEL === '1' ||
+  process.env.VERCEL === 'true' ||
+  typeof process.env.VERCEL_ENV !== 'undefined' ||
+  typeof process.env.NOW_REGION !== 'undefined';
+
+if (!isVercelRuntime) {
   bootstrap().catch((error) => {
     console.error('Bootstrap failed:', error);
-    process.exit(1);
   });
 }

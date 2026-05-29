@@ -10,9 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessagingService } from './messaging.service';
-import { getAllowedCorsOrigins, isOriginAllowed } from '../common/cors';
-
-const allowedCorsOrigins = getAllowedCorsOrigins();
+import { isOriginAllowed } from '../common/cors';
 
 @WebSocketGateway({
   cors: {
@@ -20,7 +18,7 @@ const allowedCorsOrigins = getAllowedCorsOrigins();
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      if (isOriginAllowed(origin, allowedCorsOrigins)) {
+      if (isOriginAllowed(origin)) {
         return callback(null, true);
       }
       return callback(new Error('Origin not allowed by CORS'));
