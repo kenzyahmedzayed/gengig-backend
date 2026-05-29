@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express, { type Request, type Response } from 'express';
+import { getAllowedCorsOrigins, isOriginAllowed } from './common/cors';
 
 dns.setDefaultResultOrder('ipv4first');
 
@@ -36,24 +37,8 @@ async function configureApp(app: any, enableWebSockets = true) {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const normalizeOrigin = (value: string) =>
-    value.trim().replace(/\/+$/, '').toLowerCase();
-
-  const defaultCorsOrigins = [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://gengig-frontend.vercel.app',
-    'https://www.gengig-frontend.vercel.app',
-  ];
-
-  const envCorsOrigins = (process.env.CORS_ORIGINS || '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
-
-  const allowedCorsOrigins = Array.from(
-    new Set([...defaultCorsOrigins, ...envCorsOrigins].map(normalizeOrigin)),
-  );
+  const allowedCorsOrigins = getAllowedCorsOrigins();
+  console.log('Allowed CORS origins:', allowedCorsOrigins);
 
   app.enableCors({
     origin: (origin: string | undefined, callback: any) => {
@@ -62,8 +47,7 @@ async function configureApp(app: any, enableWebSockets = true) {
         return callback(null, true);
       }
 
-      const normalizedOrigin = normalizeOrigin(origin);
-      if (allowedCorsOrigins.includes(normalizedOrigin)) {
+      if (isOriginAllowed(origin, allowedCorsOrigins)) {
         return callback(null, true);
       }
 
@@ -127,6 +111,7 @@ export const handler = async (req: any, res: any) => {
         new ExpressAdapter(expressApp),
         { bodyParser: false },
       );
+      // Vercel Functions cannot act as a WebSocket server.
       await configureApp(app, false);
       await app.init();
       cachedExpressApp = expressApp;

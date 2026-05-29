@@ -48,3 +48,4 @@ Set these in Vercel Project Settings -> Environment Variables:
 
 - WebSockets are disabled in the serverless handler path, since Vercel serverless functions are request/response based.
 - Swagger will be available at `/api/docs`.
+- Real-time chat presence/typing needs a WebSocket-capable host (for example: Railway/Render/Fly) or a third-party realtime provider (Ably/Pusher/Supabase Realtime).
