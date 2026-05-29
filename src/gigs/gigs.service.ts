@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Gig, GigDocument } from './gig.schema';
 import { CreateGigDto } from './dto/create-gig.dto';
 import { User, UserDocument } from '../users/users.schema';
@@ -80,7 +80,7 @@ async findFeatured(): Promise<GigDocument[]> {
 }
 
 async findById(id: string, userId?: string): Promise<any> {
-  if (!id || id === 'undefined') {
+  if (!id || id === 'undefined' || !Types.ObjectId.isValid(id)) {
     throw new NotFoundException('Invalid gig ID');
   }
 
