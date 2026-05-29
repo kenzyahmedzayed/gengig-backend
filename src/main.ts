@@ -36,16 +36,42 @@ async function configureApp(app: any, enableWebSockets = true) {
 
   app.useGlobalFilters(new HttpExceptionFilter());
 
-  const corsOrigins = (
-    process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:3000'
-  )
+  const normalizeOrigin = (value: string) =>
+    value.trim().replace(/\/+$/, '').toLowerCase();
+
+  const defaultCorsOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://gengig-frontend.vercel.app',
+    'https://www.gengig-frontend.vercel.app',
+  ];
+
+  const envCorsOrigins = (process.env.CORS_ORIGINS || '')
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  const allowedCorsOrigins = Array.from(
+    new Set([...defaultCorsOrigins, ...envCorsOrigins].map(normalizeOrigin)),
+  );
+
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin: string | undefined, callback: any) => {
+      // Non-browser clients (no Origin header) should still be allowed.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (allowedCorsOrigins.includes(normalizedOrigin)) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin'],
   });
 
   if (enableWebSockets) {
