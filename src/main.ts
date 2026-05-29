@@ -68,7 +68,16 @@ async function configureApp(app: any, enableWebSockets = true) {
     )
     .build();
 
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
+  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config), {
+    customCssUrl:
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css',
+    customJs: [
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js',
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js',
+    ],
+    customfavIcon:
+      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/favicon-32x32.png',
+  });
 }
 
 async function bootstrap() {
